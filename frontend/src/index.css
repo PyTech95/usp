@@ -227,6 +227,8 @@ body { margin: 0; font-family: var(--f-body); -webkit-font-smoothing: antialiase
 /* Scroll-triggered left-to-right reveal (JS adds .in-view). Only active once JS sets html.motion-ready. */
 html.motion-ready main .reveal { opacity: 0; transform: translateX(-46px); animation: none; transition: opacity .8s cubic-bezier(.22,.7,.2,1), transform .8s cubic-bezier(.22,.7,.2,1); will-change: opacity, transform; }
 html.motion-ready main .reveal.in-view { opacity: 1; transform: none; }
+html.motion-ready main .reveal.reveal-up { transform: translateY(44px); }
+html.motion-ready main .reveal.reveal-up.in-view { transform: none; }
 html.motion-ready main .reveal.d1 { transition-delay: .09s; }
 html.motion-ready main .reveal.d2 { transition-delay: .18s; }
 html.motion-ready main .reveal.d3 { transition-delay: .27s; }
@@ -1298,5 +1300,121 @@ body.live-editing .header { z-index: 1; }
   /* Keep text-style "link buttons" (home/workshops invite) flat — no lift */
   .site:has(main) .page-home .invite .btn:hover,
   .site:has(main) .page-workshops-learning .invite .btn:hover { transform: none !important; box-shadow: none !important; }
+}
+
+/* ===== Rakhigarhi — Craft Centre / Place to Arrive / Place to Pause as a 3-column row ===== */
+.site:has(main) main .page-rakhigarhi :is(#craft-centre, #place-to-arrive, #place-to-pause) {
+  display: inline-block; vertical-align: top; width: 33.333%; box-sizing: border-box;
+  margin: 0 !important; border: 0 !important; background: #fff;
+}
+.site:has(main) main .page-rakhigarhi :is(#craft-centre, #place-to-arrive, #place-to-pause) > .section {
+  box-sizing: border-box; max-width: none !important;
+  padding: clamp(2.75rem, 3.8vw, 4rem) clamp(1.1rem, 1.8vw, 2rem) clamp(3rem, 4.4vw, 4.75rem) !important;
+}
+.site:has(main) main .page-rakhigarhi #craft-centre > .section { padding-left: clamp(20px, 7.3vw, 113px) !important; }
+.site:has(main) main .page-rakhigarhi #place-to-pause > .section { padding-right: clamp(20px, 7.3vw, 113px) !important; }
+.site:has(main) main .page-rakhigarhi :is(#craft-centre, #place-to-arrive, #place-to-pause) .text-cols { display: block !important; }
+.site:has(main) main .page-rakhigarhi :is(#craft-centre, #place-to-arrive, #place-to-pause) .text-cols-head { position: static; margin-bottom: 1.1rem; }
+.site:has(main) main .page-rakhigarhi :is(#craft-centre, #place-to-arrive, #place-to-pause) .h2 {
+  position: relative; padding-top: 1.6rem; font-size: clamp(26px, 2vw, 31px); font-weight: 400; margin: 0;
+}
+.site:has(main) main .page-rakhigarhi :is(#craft-centre, #place-to-arrive, #place-to-pause) .h2::before {
+  content: ""; position: absolute; top: 0; left: 0; width: 36px; height: 2px; background: #c7c1b8;
+}
+.site:has(main) main .page-rakhigarhi :is(#craft-centre, #place-to-arrive, #place-to-pause) .prose { max-width: none; }
+.site:has(main) main .page-rakhigarhi :is(#craft-centre, #place-to-arrive, #place-to-pause) .prose a {
+  color: #D41445 !important; border-bottom: 0 !important; font-weight: 500;
+}
+.site:has(main) main .page-rakhigarhi :is(#craft-centre, #place-to-arrive, #place-to-pause) .prose a:hover { color: #a60f34 !important; }
+
+/* Closing band after the three columns */
+.site:has(main) main .page-rakhigarhi #haveli-active-use { background: #ECE9E4 !important; border: 0 !important; }
+.site:has(main) main .page-rakhigarhi #haveli-active-use > .section { padding-block: clamp(2.5rem, 3.4vw, 3.5rem) !important; }
+.site:has(main) main .page-rakhigarhi #haveli-active-use .prose { max-width: 62rem; }
+.site:has(main) main .page-rakhigarhi #haveli-active-use .prose::before {
+  content: ""; display: block; width: 52px; height: 3px; background: #D41445; margin-bottom: clamp(1.25rem, 2vw, 1.75rem);
+}
+.site:has(main) main .page-rakhigarhi #haveli-active-use .prose p { font-size: clamp(19px, 1.5vw, 24px); line-height: 1.5; color: #1f1f1f; margin: 0; }
+
+/* ===== Rakhigarhi — The Ambition: full-width eyebrow + heading, then 3 columns with dividers (pale peach) ===== */
+.site:has(main) main .page-rakhigarhi #the-ambition { background: #FCF1ED !important; border: 0 !important; }
+.site:has(main) main .page-rakhigarhi #the-ambition .eyebrow { display: block; position: relative; padding-bottom: 1rem; }
+.site:has(main) main .page-rakhigarhi #the-ambition .eyebrow::after { content: ""; position: absolute; left: 0; bottom: 0; width: 70px; height: 3px; background: #D41445; }
+.site:has(main) main .page-rakhigarhi #the-ambition .h2 { font-size: clamp(34px, 3.6vw, 52px); font-weight: 400; line-height: 1.12; margin: clamp(1.5rem, 2.4vw, 2.4rem) 0 clamp(2.25rem, 3.6vw, 3.5rem); white-space: pre-line; }
+.site:has(main) main .page-rakhigarhi #the-ambition .stacked.has-aside { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; align-items: start; }
+.site:has(main) main .page-rakhigarhi #the-ambition .stacked.has-aside > div { display: contents; }
+.site:has(main) main .page-rakhigarhi #the-ambition .prose { display: contents; max-width: none; }
+.site:has(main) main .page-rakhigarhi #the-ambition .eyebrow, .site:has(main) main .page-rakhigarhi #the-ambition .h2 { grid-column: 1 / -1; }
+.site:has(main) main .page-rakhigarhi #the-ambition .prose > p { margin: 0; padding-right: clamp(1.25rem, 2vw, 2rem); }
+.site:has(main) main .page-rakhigarhi #the-ambition .prose > p + p,
+.site:has(main) main .page-rakhigarhi #the-ambition .aside-statement {
+  border-left: 1px solid #ddd0c8; padding-left: clamp(1.5rem, 2.6vw, 2.75rem);
+}
+.site:has(main) main .page-rakhigarhi #the-ambition .aside-statement {
+  margin: 0 !important; font-size: var(--fs-body) !important; line-height: 1.65 !important; font-weight: 300 !important; color: #2b2b2b !important; white-space: normal !important; padding-right: 0 !important;
+}
+.site:has(main) main .page-rakhigarhi #the-ambition .aside-statement::before { content: none !important; }
+
+@media (max-width: 900px) {
+  .site:has(main) main .page-rakhigarhi :is(#craft-centre, #place-to-arrive, #place-to-pause) { display: block; width: 100%; border-top: 1px solid #e3e3e3 !important; }
+  .site:has(main) main .page-rakhigarhi :is(#craft-centre, #place-to-arrive, #place-to-pause) > .section { padding-inline: clamp(20px, 7.3vw, 113px) !important; }
+  .site:has(main) main .page-rakhigarhi #the-ambition .stacked.has-aside { grid-template-columns: 1fr; }
+  .site:has(main) main .page-rakhigarhi #the-ambition .stacked.has-aside > div { display: block; }
+  .site:has(main) main .page-rakhigarhi #the-ambition .prose { display: block; }
+  .site:has(main) main .page-rakhigarhi #the-ambition .prose > p { padding: 0 0 1em; }
+  .site:has(main) main .page-rakhigarhi #the-ambition .prose > p + p,
+  .site:has(main) main .page-rakhigarhi #the-ambition .aside-statement { border-left: 0; padding-left: 0; }
+}
+
+/* ================= Connect & About — editorial redesign ================= */
+/* Hero treatment shared by both pages */
+.site:has(main) :is(.page-connect, .page-about) [data-testid="block-0"] :is(.hero-type, .hero-inner, .hero-grid) {
+  background: #ECE9E4; max-width: none;
+  padding: clamp(4.5rem, 8vw, 8.5rem) clamp(20px, 7.3vw, 113px) clamp(3.5rem, 6vw, 6rem) !important;
+}
+.site:has(main) :is(.page-connect, .page-about) [data-testid="block-0"] .hero-text::before {
+  content: ""; display: block; width: 52px; height: 3px; background: #D41445; margin-bottom: clamp(1.25rem, 2.4vw, 2rem);
+}
+.site:has(main) :is(.page-connect, .page-about) [data-testid="block-0"] .eyebrow { letter-spacing: .22em !important; }
+.site:has(main) :is(.page-connect, .page-about) [data-testid="block-0"] .h1 { font-size: clamp(38px, 4vw, 58px); font-weight: 400; }
+
+/* Section headings get a small ruby tick (both pages) */
+.site:has(main) :is(.page-connect, .page-about) main .text-cols-head .h2 { position: relative; padding-top: 1.5rem; font-weight: 400; }
+.site:has(main) :is(.page-connect, .page-about) main .text-cols-head .h2::before {
+  content: ""; position: absolute; top: 0; left: 0; width: 40px; height: 2px; background: #D41445;
+}
+
+/* ---- Connect: send-a-message + contact details ---- */
+.site:has(main) .page-connect [data-testid="block-1"] { border-top: 1px solid #e6e2dc; }
+.site:has(main) .page-connect [data-testid="block-1"] > * , .site:has(main) .page-connect [data-testid="block-1"] { }
+.site:has(main) .page-connect [data-testid="block-1"] .text-cols-head { align-self: start; position: sticky; top: 108px; }
+.site:has(main) .page-connect [data-testid="block-1"] .text-cols-head p { max-width: 30ch; color: #555; }
+.site:has(main) .page-connect .contact-form, .site:has(main) .page-connect form { max-width: 640px; }
+.site:has(main) .page-connect .form-field label { font-weight: 500; font-size: .82rem; letter-spacing: .1em; text-transform: uppercase; color: #333; }
+.site:has(main) .page-connect .form-field input, .site:has(main) .page-connect .form-field select, .site:has(main) .page-connect .form-field textarea {
+  background: #fff; border: 1px solid #d9d2c9; border-radius: 2px; padding: .85rem 1rem; min-height: 52px;
+}
+.site:has(main) .page-connect .form-field :is(input, select, textarea):focus {
+  border-color: #D41445; box-shadow: 0 0 0 3px rgba(212, 20, 69, .16); outline: none;
+}
+.site:has(main) .page-connect [data-testid="block-2"] { background: #FCF1ED; border-top: 1px solid #efe5de; }
+.site:has(main) .page-connect [data-testid="block-2"] > .section { padding-block: clamp(2.75rem, 4vw, 4rem) !important; }
+.site:has(main) .page-connect [data-testid="block-2"] .prose p { color: #2b2b2b; }
+
+/* ---- About: alternating rhythm + team + gallery + closing invite ---- */
+.site:has(main) .page-about [data-testid="block-0"] .photo { margin-top: clamp(2rem, 4vw, 3rem); }
+.site:has(main) .page-about :is([data-testid="block-2"], [data-testid="block-4"]) { background: #F6F3EF; border-block: 1px solid #ece7e0; }
+.site:has(main) .page-about main .text-cols { gap: clamp(1.5rem, 3vw, 3rem) clamp(2.5rem, 5vw, 5.5rem); }
+.site:has(main) .page-about main .text-cols > .section, .site:has(main) .page-about main [data-block-type="text"] > .section { padding-block: clamp(3rem, 5vw, 5rem) !important; }
+.site:has(main) .page-about [data-testid="block-6"] .gallery { columns: 3; column-gap: clamp(1rem, 1.6vw, 1.5rem); }
+.site:has(main) .page-about [data-testid="block-6"] .gallery .photo { margin-bottom: clamp(1rem, 1.6vw, 1.5rem); border-radius: 3px; overflow: hidden; }
+.site:has(main) .page-about [data-testid="block-7"] { background: #111; }
+.site:has(main) .page-about [data-testid="block-7"] :is(.h2, .lede, .lede p, p) { color: #fff !important; }
+.site:has(main) .page-about [data-testid="block-7"] .btn { background: #fff; color: #111 !important; border-color: #fff; }
+.site:has(main) .page-about [data-testid="block-7"] .btn:hover { background: #D41445; border-color: #D41445; color: #fff !important; }
+
+@media (max-width: 860px) {
+  .site:has(main) .page-connect [data-testid="block-1"] .text-cols-head { position: static; }
+  .site:has(main) .page-about [data-testid="block-6"] .gallery { columns: 2; }
 }
 

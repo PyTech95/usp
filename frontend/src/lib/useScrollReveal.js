@@ -1,12 +1,8 @@
 import { useEffect } from "react";
 
-// Curated block-level targets that should "open" left-to-right as they scroll into view.
-const SELECTORS = [
-  ".hero-text", ".prose", ".lede", ".eyebrow", ".photo", ".aside-statement",
-  ".hero-actions", ".invite-inner", ".work-card", ".note-card", ".note-item",
-  ".collage", ".area-strip", ".split-text", ".image-body", ".pull-quote",
-  ".mosaic", ".gallery", ".h1", ".h2", ".h3",
-];
+// Images/cards slide in from the left; text blocks rise up — for a varied scroll.
+const LEFT = [".photo", ".collage", ".mosaic", ".gallery", ".work-card", ".note-card", ".note-item"];
+const UP = [".hero-text", ".prose", ".lede", ".eyebrow", ".h1", ".h2", ".h3", ".aside-statement", ".area-strip", ".invite-inner", ".hero-actions", ".split-text", ".image-body", ".pull-quote"];
 
 export function useScrollReveal(deps = []) {
   useEffect(() => {
@@ -27,10 +23,8 @@ export function useScrollReveal(deps = []) {
 
     const targets = new Set();
     scope.querySelectorAll(".reveal").forEach((el) => targets.add(el));
-    SELECTORS.forEach((sel) => scope.querySelectorAll(sel).forEach((el) => {
-      el.classList.add("reveal");
-      targets.add(el);
-    }));
+    LEFT.forEach((sel) => scope.querySelectorAll(sel).forEach((el) => { el.classList.add("reveal"); targets.add(el); }));
+    UP.forEach((sel) => scope.querySelectorAll(sel).forEach((el) => { el.classList.add("reveal", "reveal-up"); targets.add(el); }));
 
     const io = new IntersectionObserver((entries) => {
       entries.forEach((e) => {

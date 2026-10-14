@@ -2,8 +2,8 @@ import csv
 import io
 import os
 import re
-from fastapi import APIRouter, HTTPException, Depends
-from fastapi.responses import Response
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
+from fastapi.responses import Response, FileResponse
 from pydantic import BaseModel, EmailStr
 from core import (db, now, new_id, require, current_user, can, sanitize_tree, resolve_media_tree, public_user,
                   PAGE_PATHS, SITE_URL, media_public_ok)
@@ -639,3 +639,114 @@ async def backup(user=Depends(require("config"))):
     out["users"] = await db.users.find({}, {"_id": 0, "password_hash": 0}).to_list(1000)
     return Response(json.dumps(out, default=str, indent=1), media_type="application/json",
                     headers={"Content-Disposition": f'attachment; filename="usp-backup-{now()[:10]}.json"', "Cache-Control": "no-store"})
+
+
+def _collect_media_paths(media_docs):
+    paths, ctypes = set(), {}
+
+    def walk(o):
+        if isinstance(o, str):
+            if o.startswith("uspindia/"):
+                paths.add(o)
+        elif isinstance(o, dict):
+            for v in o.values():
+                walk(v)
+        elif isinstance(o, list):
+            for v in o:
+                walk(v)
+    for m in media_docs:
+        walk(m)
+        if m.get("original_path"):
+            ctypes[m["original_path"]] = m.get("content_type") or "application/octet-stream"
+        for d in m.get("derivs") or []:
+            if d.get("path"):
+                ctypes[d["path"]] = d.get("ctype") or "image/jpeg"
+    return paths, ctypes
+
+
+EXPORT_COLLECTIONS = ("settings", "pages", "notes", "media", "redirects")
+
+
+@router.get("/site-export")
+async def site_export(user=Depends(require("config"))):
+    """Export the whole site (all content + media files) as a portable .zip to import elsewhere."""
+    import json
+    import zipfile
+    import tempfile
+    import asyncio
+    import core
+    content = {"version": 1, "exported_at": now(), "collections": {}}
+    for c in EXPORT_COLLECTIONS:
+        content["collections"][c] = await db[c].find({}, {"_id": 0}).to_list(100000)
+    paths, ctypes = _collect_media_paths(content["collections"]["media"])
+    sem = asyncio.Semaphore(16)
+
+    async def fetch(p):
+        async with sem:
+            try:
+                return p, await core.get_object(p)
+            except Exception:
+                return p, None
+    fetched = await asyncio.gather(*[fetch(p) for p in sorted(paths)])
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".zip")
+    saved = 0
+    with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr("content.json", json.dumps(content, default=str))
+        for p, data in fetched:
+            if data:
+                z.writestr(f"media/{p}", data)
+                saved += 1
+        z.writestr("manifest.json", json.dumps({
+            "version": 1, "exported_at": now(), "ctypes": ctypes,
+            "counts": {c: len(v) for c, v in content["collections"].items()},
+            "media_paths": len(paths), "media_saved": saved,
+        }, default=str))
+    tmp.flush()
+    tmp.close()
+    return FileResponse(tmp.name, media_type="application/zip", filename=f"usp-site-export-{now()[:10]}.zip",
+                        headers={"Cache-Control": "no-store"})
+
+
+@router.post("/site-import")
+async def site_import(file: UploadFile = File(...), user=Depends(require("config"))):
+    """Import a site-export .zip: restores all content and re-uploads media to this environment's storage."""
+    import json
+    import io as _io
+    import zipfile
+    import core
+    raw = await file.read()
+    try:
+        z = zipfile.ZipFile(_io.BytesIO(raw))
+        content = json.loads(z.read("content.json"))
+    except Exception:
+        raise HTTPException(400, "Invalid export file. Upload a .zip produced by Export.")
+    ctypes = {}
+    try:
+        ctypes = json.loads(z.read("manifest.json")).get("ctypes", {})
+    except Exception:
+        pass
+    media_ok = 0
+    for name in z.namelist():
+        if name.startswith("media/") and not name.endswith("/"):
+            path = name[len("media/"):]
+            data = z.read(name)
+            if data:
+                try:
+                    await core.put_object(path, data, ctypes.get(path, "application/octet-stream"))
+                    media_ok += 1
+                except Exception:
+                    pass
+    summary = {}
+    for c, docs in (content.get("collections") or {}).items():
+        if c not in EXPORT_COLLECTIONS:
+            continue
+        n = 0
+        for d in docs:
+            kf = next((k for k in ("key", "id", "from", "slug") if d.get(k) is not None), None)
+            if not kf:
+                continue
+            await db[c].replace_one({kf: d[kf]}, d, upsert=True)
+            n += 1
+        summary[c] = n
+    await snapshot("site", "import", {"counts": summary, "media": media_ok}, "site imported", user)
+    return {"ok": True, "imported": summary, "media_restored": media_ok}

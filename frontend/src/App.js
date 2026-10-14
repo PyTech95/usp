@@ -23,6 +23,7 @@ import Enquiries from "./pages/admin/Enquiries";
 import Seo from "./pages/admin/Seo";
 import Users from "./pages/admin/Users";
 import Settings from "./pages/admin/Settings";
+import ImportExport from "./pages/admin/ImportExport";
 import { PagePreview, NotePreview } from "./pages/admin/Previews";
 
 const CHILDREN = ["rakhigarhi", "theatre", "craft-livelihood", "workshops-learning"];
@@ -68,6 +69,7 @@ function App() {
               <Route path="seo" element={<Seo />} />
               <Route path="users" element={<Users />} />
               <Route path="settings" element={<Settings />} />
+              <Route path="transfer" element={<ImportExport />} />
             </Route>
           </Routes>
         </BrowserRouter>

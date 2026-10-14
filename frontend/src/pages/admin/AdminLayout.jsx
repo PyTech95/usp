@@ -1,5 +1,5 @@
 import { NavLink, Outlet, Link } from "react-router-dom";
-import { LayoutDashboard, FileText, NotebookPen, Images, Menu as MenuIcon, Palette, Inbox, Search, Users, Settings, LogOut, ExternalLink, Wand2 } from "lucide-react";
+import { LayoutDashboard, FileText, NotebookPen, Images, Menu as MenuIcon, Palette, Inbox, Search, Users, Settings, LogOut, ExternalLink, Wand2, DatabaseBackup } from "lucide-react";
 import { useAuth } from "../../lib/auth";
 
 const NAV = [
@@ -12,6 +12,7 @@ const NAV = [
   ["/admin/enquiries", "Enquiries", Inbox, "enquiries"],
   ["/admin/seo", "SEO & Sharing", Search, null],
   ["/admin/users", "Users", Users, "users"],
+  ["/admin/transfer", "Import / Export", DatabaseBackup, "config"],
   ["/admin/settings", "Settings", Settings, null],
 ];
 const ROLE = { owner: "Owner / Admin", editor: "Editor", contributor: "Contributor", reviewer: "Client reviewer" };

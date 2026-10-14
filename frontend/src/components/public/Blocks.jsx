@@ -138,7 +138,8 @@ export function Block(props) {
   const el = <BlockInner {...props} />;
   const secStyle = props.s?.styles?._section;
   const style = secStyle && Object.keys(secStyle).length ? secStyle : undefined;
-  return <div id={d.anchor || undefined} className={`hb hb-${t} ${d.band ? "band" : ""}`} data-block-type={t} data-sec={props.s.id} style={style} data-testid={`block-${props.i}-wrap`}>{el}</div>;
+  const hasBg = !!secStyle?.backgroundColor;
+  return <div id={d.anchor || undefined} className={`hb hb-${t} ${d.band ? "band" : ""} ${hasBg ? "hb-bg" : ""}`} data-block-type={t} data-sec={props.s.id} style={style} data-testid={`block-${props.i}-wrap`}>{el}</div>;
 }
 
 function TextBlock({ d, s, first, id }) {

@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import {
   Pencil, X, Save, Upload, Images, RotateCcw, AlignLeft, AlignCenter, AlignRight,
   ArrowUp, ArrowDown, Copy, Trash2, Eye, EyeOff, Plus, Undo2, Redo2, Bold, Italic,
-  Monitor, Tablet, Smartphone, Type, Paintbrush, Square, LayoutGrid,
+  Monitor, Tablet, Smartphone, Type, Paintbrush, Square, LayoutGrid, GripVertical,
 } from "lucide-react";
 import { api, errMsg } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
@@ -68,6 +68,7 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
   const [rect, setRect] = useState(null);
   const [device, setDevice] = useState("desktop");
   const [hist, setHist] = useState({ past: [], future: [] });
+  const [pos, setPos] = useState(null);
   const fileRef = useRef(null);
 
   const sections = content.sections;
@@ -129,8 +130,9 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
 
   useEffect(() => {
     document.body.classList.remove("live-dev-tablet", "live-dev-mobile");
-    if (on && device !== "desktop") document.body.classList.add(`live-dev-${device}`);
   }, [on, device]);
+
+  const previewSrc = typeof window !== "undefined" ? window.location.pathname : "/";
 
   // click to select
   useEffect(() => {
@@ -210,6 +212,19 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
     const up = () => { window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up); };
     window.addEventListener("pointermove", mv); window.addEventListener("pointerup", up);
   };
+  const dragPanel = (e) => {
+    if (e.target.closest("button")) return;
+    e.preventDefault();
+    const panel = e.currentTarget.closest(".live-panel");
+    const r = panel.getBoundingClientRect();
+    const off = { x: e.clientX - r.left, y: e.clientY - r.top };
+    const mv = (ev) => setPos({
+      left: Math.max(4, Math.min(window.innerWidth - 80, ev.clientX - off.x)),
+      top: Math.max(4, Math.min(window.innerHeight - 44, ev.clientY - off.y)),
+    });
+    const up = () => { window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up); };
+    window.addEventListener("pointermove", mv); window.addEventListener("pointerup", up);
+  };
 
   if (!on) return (
     <button type="button" className="live-ui live-toggle" onClick={() => setOn(true)} data-testid="live-editor-toggle"><Pencil size={15} /> Live editor</button>
@@ -237,9 +252,9 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
         </div>
       )}
 
-      <aside className="live-ui live-panel" data-testid="live-editor-panel">
+      <aside className="live-ui live-panel" style={pos ? { top: pos.top, left: pos.left, right: "auto" } : undefined} data-testid="live-editor-panel">
         <div className="live-row live-top">
-          <strong>Live editor</strong>
+          <strong className="live-drag" onPointerDown={dragPanel} title="Drag to move" data-testid="live-panel-drag"><GripVertical size={14} /> Live editor</strong>
           <button type="button" className="live-btn" disabled={!hist.past.length} onClick={undo} title="Undo" data-testid="live-undo"><Undo2 size={14} /></button>
           <button type="button" className="live-btn" disabled={!hist.future.length} onClick={redo} title="Redo" data-testid="live-redo"><Redo2 size={14} /></button>
           <button type="button" className="live-btn live-primary" disabled={busy || !dirty} onClick={save} data-testid="live-save-btn"><Save size={14} /> {busy ? "Saving…" : "Save"}</button>
@@ -340,6 +355,18 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
       )}
 
       <MediaPicker open={picker} onClose={() => setPicker(false)} onPick={setImage} />
+
+      {device !== "desktop" && (
+        <div className="live-ui live-preview" data-testid="live-preview-overlay">
+          <div className="live-preview-bar">
+            <span>{device === "mobile" ? "Mobile preview (375px)" : "Tablet preview (768px)"} — view only. Edits are made in desktop view.</span>
+            <button type="button" className="live-btn" onClick={() => setDevice("desktop")} data-testid="live-preview-close"><X size={14} /> Back to editing</button>
+          </div>
+          <div className="live-preview-stage">
+            <iframe title="Responsive preview" src={previewSrc} className={`live-frame live-frame-${device}`} data-testid="live-preview-frame" />
+          </div>
+        </div>
+      )}
     </>
   );
 }

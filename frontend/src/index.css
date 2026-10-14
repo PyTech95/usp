@@ -975,7 +975,6 @@ body { margin: 0; font-family: var(--f-body); -webkit-font-smoothing: antialiase
 body.live-editing main [data-edit] { outline: 1px dashed rgba(212, 20, 69, .45); outline-offset: 3px; cursor: pointer; }
 body.live-editing main [data-edit]:hover { outline: 2px solid rgba(212, 20, 69, .8); }
 body.live-editing main [data-edit][contenteditable="true"] { cursor: text; outline: none; }
-body.live-editing main { padding-right: 300px; }
 .live-ui { font-family: "Public Sans", system-ui, sans-serif; }
 .live-toggle { position: fixed; left: 18px; bottom: 18px; z-index: 100001; display: inline-flex; gap: 8px; align-items: center; padding: 10px 16px; border-radius: 999px; background: #D41445; color: #fff; font-size: 14px; box-shadow: 0 6px 20px rgba(0,0,0,.18); transition: transform .15s; }
 .live-toggle:hover { transform: translateY(-2px); }
@@ -984,7 +983,8 @@ body.live-editing main { padding-right: 300px; }
 .live-h-r { right: -9px; top: 50%; width: 12px; height: 28px; margin-top: -14px; cursor: ew-resize; }
 .live-h-b { bottom: -9px; left: 50%; width: 28px; height: 12px; margin-left: -14px; cursor: ns-resize; }
 .live-h-c { right: -10px; bottom: -10px; width: 16px; height: 16px; cursor: nwse-resize; }
-.live-panel { position: fixed; top: 12px; right: 12px; bottom: 12px; width: 276px; z-index: 100001; background: #fff; border: 1px solid #ddd; box-shadow: 0 10px 40px rgba(0,0,0,.15); padding: 14px; overflow-y: auto; font-size: 13px; color: #2d302b; }
+.live-panel { position: fixed; top: 12px; right: 12px; width: 300px; max-height: calc(100vh - 24px); z-index: 100001; background: #fff; border: 1px solid #ddd; box-shadow: 0 10px 40px rgba(0,0,0,.22); padding: 14px; overflow-y: auto; font-size: 13px; color: #2d302b; border-radius: 8px; }
+.live-drag { flex: 1; display: inline-flex; align-items: center; gap: 6px; cursor: move; user-select: none; touch-action: none; }
 .live-row { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 10px; flex-wrap: wrap; }
 .live-top { align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; }
 .live-top strong { flex: 1; }
@@ -1021,13 +1021,20 @@ body.live-editing main [data-sec]:hover { outline: 1px dashed rgba(52,76,64,.4);
 .live-add-item:hover { border-color: #D41445; color: #D41445; transform: translateY(-2px); }
 .photo-addslot .photo-frame { min-height: 180px; display: flex; align-items: center; justify-content: center; background: repeating-linear-gradient(45deg, #f3f0ec, #f3f0ec 10px, #eae5dd 10px, #eae5dd 20px); border: 2px dashed #b9a98f; color: #6b5f4b; font-size: 13px; font-weight: 600; }
 body:not(.live-editing) .live-dev-tablet, body:not(.live-editing) .live-dev-mobile { all: unset; }
-body.live-dev-tablet main, body.live-dev-mobile main { margin-inline: auto; transition: max-width .25s ease; box-shadow: 0 0 0 9999px rgba(20,22,20,.12); outline: 1px solid rgba(0,0,0,.15); }
-body.live-dev-tablet main { max-width: 768px; }
-body.live-dev-mobile main { max-width: 390px; }
 /* Editor UI must sit above the sticky public header */
 body.live-editing .header { z-index: 1; }
 .live-toggle, .live-add-menu { z-index: 100050; }
 .live-panel { z-index: 100050; }
+/* Section custom background: let the wrapper colour show through inner section fills */
+.hb-bg > section { background: transparent !important; }
+/* Responsive device preview (real viewport via iframe) */
+.live-preview { position: fixed; inset: 0; z-index: 100060; background: #1b1d1b; display: flex; flex-direction: column; }
+.live-preview-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px; color: #fff; font-size: 13px; background: #111; }
+.live-preview-bar .live-btn { background: #fff; color: #2d302b; }
+.live-preview-stage { flex: 1; display: flex; align-items: flex-start; justify-content: center; overflow: auto; padding: 20px; }
+.live-frame { background: #fff; border: 0; height: calc(100vh - 100px); box-shadow: 0 10px 40px rgba(0,0,0,.45); border-radius: 14px; }
+.live-frame-mobile { width: 375px; }
+.live-frame-tablet { width: 768px; }
 
 /* Workshops & Learning — client mockup (mint #DCEFE8) */
 .site:has(.page-workshops-learning) { --mint: #DCEFE8; --ruby: #D41445; }

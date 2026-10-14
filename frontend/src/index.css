@@ -1090,7 +1090,7 @@ body.live-editing .header { z-index: 1; }
 .site:has(main) main { border-top: 0; }
 /* Workshops & Learning palette: lavender nav + intro band, warm-gray hero */
 .site:has(.page-workshops-learning) { --lav: #EBE7EB; --warm: #EDEAE7; }
-@media (min-width: 961px) { .site:has(.page-workshops-learning) nav[aria-label="Main"] { background: var(--lav) !important; } }
+@media (min-width: 961px) { .site:has(.page-workshops-learning) nav[aria-label="Main"] { background: var(--nav-peach) !important; } }
 .site:has(main) .page-workshops-learning [data-testid="block-0"] .hero-type { background: var(--warm) !important; }
 .site:has(main) .page-workshops-learning #learning-intro { background: var(--lav) !important; border-top: 6px solid #fff !important; }
 .site:has(main) .page-workshops-learning #learning-intro .stacked.has-aside > div { border-left: 4px solid #D41445; }
@@ -1271,3 +1271,11 @@ body.live-editing .header { z-index: 1; }
   .site:has(main) main .page-rakhigarhi #rakhigarhi-intro .aside-statement { padding-left: 1.25rem !important; }
   .site:has(main) main .page-rakhigarhi [data-testid="block-0"] .hero-type { padding: 4rem 28px 3.5rem !important; }
 }
+
+/* ---- Consistent navigation bar + tiny white sliver between nav and hero (all pages) ---- */
+@media (min-width: 961px) {
+  .site nav[aria-label="Main"],
+  .site:has(.page-workshops-learning) nav[aria-label="Main"] { background: var(--nav-peach) !important; }
+}
+.site:has(main) .header,
+.site:has(.page-home) .header { border-bottom: 4px solid #fff !important; }

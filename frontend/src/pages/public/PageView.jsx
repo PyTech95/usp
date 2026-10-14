@@ -5,6 +5,7 @@ import { useMeta, useSite, SITE_URL } from "../../lib/site";
 import { Blocks } from "../../components/public/Blocks";
 import { LiveEditor } from "../../components/public/LiveEditor";
 import { loadFont } from "../../lib/site";
+import { useScrollReveal } from "../../lib/useScrollReveal";
 import NotFound from "./NotFound";
 
 const PATHS = { home: "/", about: "/about", "our-work": "/our-work", rakhigarhi: "/our-work/rakhigarhi", theatre: "/our-work/theatre", "craft-livelihood": "/our-work/craft-livelihood", "workshops-learning": "/our-work/workshops-learning", "field-notes": "/field-notes", connect: "/connect" };
@@ -28,6 +29,7 @@ export function PageBody({ pageKey, content: initial, live }) {
   const [rev, setRev] = useState(0);
   useEffect(() => { setContent(initial); }, [initial]);
   useEffect(() => { content.sections.forEach((s) => Object.values(s.styles || {}).forEach((v) => loadFont(v.fontFamily))); }, [content]);
+  useScrollReveal([pageKey, content, rev, live]);
   const seo = content.seo || {};
   const name = site?.site_name || "USP India";
   useMeta({

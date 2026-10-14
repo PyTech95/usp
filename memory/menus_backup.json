@@ -1,0 +1,159 @@
+{
+ "main": [
+  {
+   "id": "m-home",
+   "label": "Home",
+   "href": "/",
+   "required": true,
+   "children": []
+  },
+  {
+   "id": "m-about",
+   "label": "About",
+   "href": "/about",
+   "required": true,
+   "children": [
+    {
+     "id": "m-team",
+     "label": "Team",
+     "href": "/about#team"
+    }
+   ]
+  },
+  {
+   "id": "m-work",
+   "label": "Our Work",
+   "href": "/our-work",
+   "required": true,
+   "children": [
+    {
+     "id": "m-rak",
+     "label": "Rakhigarhi",
+     "href": "/our-work/rakhigarhi",
+     "required": true,
+     "children": [
+      {
+       "id": "m-rak-1",
+       "label": "Archaeology & Rakhigarhi",
+       "href": "/our-work/rakhigarhi#archaeology"
+      },
+      {
+       "id": "m-rak-2",
+       "label": "The Rakhigarhi Haveli and Chaupal",
+       "href": "/our-work/rakhigarhi#haveli-chaupal"
+      },
+      {
+       "id": "m-rak-3",
+       "label": "Heritage Guide Program",
+       "href": "/our-work/workshops-learning#heritage-guide"
+      },
+      {
+       "id": "m-rak-4",
+       "label": "Women, Craft & Livelihood",
+       "href": "/our-work/craft-livelihood"
+      }
+     ]
+    },
+    {
+     "id": "m-the",
+     "label": "Theatre",
+     "href": "/our-work/theatre",
+     "required": true,
+     "children": [
+      {
+       "id": "m-the-1",
+       "label": "Stories Brought to Life",
+       "href": "/our-work/theatre"
+      },
+      {
+       "id": "m-the-2",
+       "label": "The Prayer Meeting Edit",
+       "href": "/our-work/theatre#prayer-meeting"
+      },
+      {
+       "id": "m-the-3",
+       "label": "Past Work",
+       "href": "/our-work/theatre#past-work"
+      }
+     ]
+    },
+    {
+     "id": "m-cra",
+     "label": "Craft & Livelihood",
+     "href": "/our-work/craft-livelihood",
+     "required": true,
+     "children": [
+      {
+       "id": "m-cra-1",
+       "label": "Craft Centre at the Haveli and Chaupal",
+       "href": "/our-work/craft-livelihood#craft-centre"
+      },
+      {
+       "id": "m-cra-2",
+       "label": "Basket Making",
+       "href": "/our-work/craft-livelihood#basket-making"
+      },
+      {
+       "id": "m-cra-3",
+       "label": "Papier-M\u00e2ch\u00e9",
+       "href": "/our-work/craft-livelihood#papier-mache"
+      },
+      {
+       "id": "m-cra-4",
+       "label": "Dhurrie Weaving",
+       "href": "/our-work/craft-livelihood#dhurrie-weaving"
+      },
+      {
+       "id": "m-cra-5",
+       "label": "The Impact and the Ambition",
+       "href": "/our-work/craft-livelihood#impact-ambition"
+      }
+     ]
+    },
+    {
+     "id": "m-wor",
+     "label": "Workshops & Learning",
+     "href": "/our-work/workshops-learning",
+     "required": true,
+     "children": [
+      {
+       "id": "m-wor-1",
+       "label": "Training \u2013 Heritage Guide",
+       "href": "/our-work/workshops-learning#heritage-guide"
+      },
+      {
+       "id": "m-wor-2",
+       "label": "Restoration Skills",
+       "href": "/our-work/workshops-learning#restoration-skills"
+      },
+      {
+       "id": "m-wor-3",
+       "label": "Creative Exchange",
+       "href": "/our-work/workshops-learning#creative-exchange"
+      },
+      {
+       "id": "m-wor-4",
+       "label": "Student Projects",
+       "href": "/our-work/workshops-learning#student-projects"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "m-notes",
+   "label": "Field Notes",
+   "href": "/field-notes",
+   "required": true,
+   "children": []
+  },
+  {
+   "id": "m-connect",
+   "label": "Connect",
+   "href": "/connect",
+   "required": true,
+   "children": []
+  }
+ ],
+ "footer": []
+}

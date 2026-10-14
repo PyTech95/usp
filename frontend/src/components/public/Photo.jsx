@@ -1,0 +1,56 @@
+import { useState } from "react";
+import { media } from "../../lib/api";
+import { usePreview } from "../../lib/site";
+
+function Pending({ ref_, testid }) {
+  return (
+    <div className="photo-pending" data-testid={testid ? `${testid}-pending` : undefined}>
+      <span><strong>Photograph pending</strong>{ref_?.media_id ? "Selected file is missing or deleted." : "No approved photograph selected for this module."}</span>
+    </div>
+  );
+}
+
+export function Photo({ ref_, eager = false, sizes = "(min-width: 1024px) 58vw, 100vw", crop, cropMobile, framed, testid, small, className = "", ed }) {
+  const preview = usePreview();
+  const [showOriginal, setShowOriginal] = useState(false);
+  const m = ref_?.media;
+  if (!m) return preview ? <Pending ref_={ref_} testid={testid} /> : null;
+  const shown = showOriginal && m.original ? m.original : m;
+  const caption = ref_.caption || m.caption;
+  const style = {
+    "--fx-d": `${m.focal_desktop.x}%`, "--fy-d": `${m.focal_desktop.y}%`,
+    "--fx-m": `${m.focal_mobile.x}%`, "--fy-m": `${m.focal_mobile.y}%`,
+    ...(crop ? { "--ratio": crop } : {}), ...(cropMobile ? { "--ratio-m": cropMobile } : {}), ...(small ? { maxWidth: 420 } : {}),
+    ...(ed?.style?.width ? { width: ed.style.width, maxWidth: "100%" } : {}),
+  };
+  const imgStyle = ed?.style?.height ? { height: ed.style.height, width: "100%", aspectRatio: "auto", objectFit: "cover" } : undefined;
+  return (
+    <figure className={`photo ${crop ? "crop" : ""} ${framed ? "framed" : ""} ${className}`} style={style} data-testid={testid} data-edit={ed?.["data-edit"]}>
+      <div className="photo-frame">
+        <img
+          key={shown.id}
+          src={media(shown.src)}
+          srcSet={shown.srcs.map((s) => `${media(s.url)} ${s.w}w`).join(", ")}
+          sizes={sizes}
+          width={shown.width}
+          height={shown.height}
+          alt={m.alt || ""}
+          loading={eager ? "eager" : "lazy"}
+          fetchPriority={eager ? "high" : undefined}
+          decoding="async"
+          style={imgStyle}
+        />
+      </div>
+      {(caption || m.credit) && <figcaption>{caption}{m.credit ? ` — ${m.credit}` : ""}</figcaption>}
+      {m.original && (
+        <div className="photo-original">
+          <button type="button" aria-pressed={showOriginal} onClick={() => setShowOriginal(!showOriginal)} data-testid={testid ? `${testid}-original-toggle` : "photo-original-toggle"}>
+            {showOriginal ? "Showing the original photograph — view edited version" : "View the original photograph"}
+          </button>
+          {m.edit_note && <span className="photo-edit-note" data-testid="photo-edit-note">Edit made: {m.edit_note}</span>}
+        </div>
+      )}
+      {!m.public_ok && <span className="photo-flag">Not approved for public use — shown in private preview only</span>}
+    </figure>
+  );
+}

@@ -1031,6 +1031,7 @@ body.live-editing .header { z-index: 1; }
 .live-preview { position: fixed; inset: 0; z-index: 100060; background: #1b1d1b; display: flex; flex-direction: column; }
 .live-preview-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px; color: #fff; font-size: 13px; background: #111; }
 .live-preview-bar .live-btn { background: #fff; color: #2d302b; }
+.live-preview-devs { display: flex; gap: 8px; align-items: center; }
 .live-preview-stage { flex: 1; display: flex; align-items: flex-start; justify-content: center; overflow: auto; padding: 20px; }
 .live-frame { background: #fff; border: 0; height: calc(100vh - 100px); box-shadow: 0 10px 40px rgba(0,0,0,.45); border-radius: 14px; }
 .live-frame-mobile { width: 375px; }

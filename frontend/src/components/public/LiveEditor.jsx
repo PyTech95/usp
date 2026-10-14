@@ -360,7 +360,11 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
         <div className="live-ui live-preview" data-testid="live-preview-overlay">
           <div className="live-preview-bar">
             <span>{device === "mobile" ? "Mobile preview (375px)" : "Tablet preview (768px)"} — view only. Edits are made in desktop view.</span>
-            <button type="button" className="live-btn" onClick={() => setDevice("desktop")} data-testid="live-preview-close"><X size={14} /> Back to editing</button>
+            <div className="live-preview-devs">
+              <button type="button" className={`live-btn ${device === "mobile" ? "live-on" : ""}`} onClick={() => setDevice("mobile")} aria-label="Mobile" data-testid="live-preview-mobile"><Smartphone size={14} /></button>
+              <button type="button" className={`live-btn ${device === "tablet" ? "live-on" : ""}`} onClick={() => setDevice("tablet")} aria-label="Tablet" data-testid="live-preview-tablet"><Tablet size={14} /></button>
+              <button type="button" className="live-btn live-primary" onClick={() => setDevice("desktop")} data-testid="live-preview-close"><X size={14} /> Back to editing</button>
+            </div>
           </div>
           <div className="live-preview-stage">
             <iframe title="Responsive preview" src={previewSrc} className={`live-frame live-frame-${device}`} data-testid="live-preview-frame" />

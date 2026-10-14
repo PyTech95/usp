@@ -16,6 +16,17 @@ export const FONTS = ["Public Sans", "Lora", "Source Serif 4", "Libre Baskervill
 
 const LABELS = { eyebrow: "Small label", heading: "Heading", subheading: "Sub-heading", intro: "Intro text",
   body_html: "Body text", aside: "Side statement", text: "Text", image: "Image", _section: "Whole section" };
+function labelFor(field) {
+  if (!field) return "";
+  if (LABELS[field]) return LABELS[field];
+  const m = field.match(/^(items|cards)\.(\d+)\.(\w+)$/);
+  if (m) {
+    const kind = m[1] === "items" ? "Card" : "Note card";
+    const sub = { title: "Title", subtitle: "Subtitle", text: "Text", eyebrow: "Small label" }[m[3]] || m[3];
+    return `${kind} ${Number(m[2]) + 1} — ${sub}`;
+  }
+  return field;
+}
 const TEXT_FIELDS = ["eyebrow", "heading", "subheading", "intro", "body_html", "aside", "text"];
 const ADD_TYPES = [
   ["text", "Text", Type], ["image_text", "Image + text", LayoutGrid], ["image", "Big image", Images],
@@ -197,8 +208,16 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
 
   const save = async () => {
     setBusy(true);
+    // Flush any in-progress inline text edit (user may click Save without blurring first)
+    let secs = sections;
+    const activeEl = findEl(sel);
+    if (activeEl && isText) {
+      const v = field.endsWith("_html") ? activeEl.innerHTML : activeEl.innerText.replace(/\n{3,}/g, "\n\n").trim();
+      secs = sections.map((s) => (s.id === sel.sec ? { ...s, data: setPath(s.data, field, v) } : s));
+      setContent((c) => ({ ...c, sections: secs }));
+    }
     try {
-      const payload = { title: content.title, sections: sections.map((s) => ({ id: s.id, type: s.type, hidden: !!s.hidden, data: stripMedia(s.data), styles: s.styles || {} })) };
+      const payload = { title: content.title, sections: secs.map((s) => ({ id: s.id, type: s.type, hidden: !!s.hidden, data: stripMedia(s.data), styles: s.styles || {} })) };
       const r = await api.put(`/admin/pages/${pageKey}/live`, payload);
       setContent(r.data.content); setBase(r.data.content); setDirty(false); setHist({ past: [], future: [] }); remount();
       toast.success("Saved — your changes are now live on the public page");
@@ -285,7 +304,7 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
           <p className="live-hint" data-testid="live-hint">Click any heading, text, image or section on the page to edit it. Drag the red handles to resize. Use the tools on a selection to move, duplicate, hide, delete or add sections. Press Save to publish your changes live.</p>
         ) : (
           <div data-testid="live-controls">
-            <p className="live-label" data-testid="live-selected-label">{LABELS[field] || field}</p>
+            <p className="live-label" data-testid="live-selected-label">{labelFor(field)}</p>
 
             {field === "image" ? (
               <div className="live-row">

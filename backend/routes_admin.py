@@ -292,6 +292,27 @@ async def publish_note(nid: str, body: PublishIn = PublishIn(), user=Depends(req
     return await get_note(nid)
 
 
+NOTE_LIVE_FIELDS = {"title", "standfirst", "author", "credits", "body_html", "cover"}
+
+
+@router.put("/notes/{nid}/live")
+async def note_live_save(nid: str, body: dict, user=Depends(require("content.publish"))):
+    """Advanced live editor for a Field Note: patch allowed fields and publish immediately."""
+    n = await get_note(nid)
+    base = dict(n.get("published") or n.get("draft") or {})
+    for k, v in (body or {}).items():
+        if k in NOTE_LIVE_FIELDS:
+            base[k] = v
+    base["title"] = str(base.get("title", "")).strip()[:200] or "Untitled"
+    base["cover"] = strip_resolved(base.get("cover") or {})
+    base["seo"] = clean_seo(base.get("seo") or {})
+    d = sanitize_tree(base)
+    await db.notes.update_one({"id": nid}, {"$set": {"draft": d, "published": d, "status": "published",
+                                                      "published_at": n.get("published_at") or now(), "updated_at": now(), "has_unpublished_changes": False}})
+    await snapshot("note", nid, d, "live edit published", user)
+    return {"id": nid, "note": await resolve_media_tree(d)}
+
+
 @router.post("/notes/{nid}/unpublish")
 async def unpublish_note(nid: str, user=Depends(require("content.publish"))):
     n = await get_note(nid)

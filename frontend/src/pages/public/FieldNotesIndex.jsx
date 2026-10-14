@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, Fragment } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Search } from "lucide-react";
 import { api } from "../../lib/api";
 import { useMeta, useSite, SITE_URL } from "../../lib/site";
 import { NoteList } from "../../components/public/NoteList";
 import { Blocks } from "../../components/public/Blocks";
+import { LiveEditor } from "../../components/public/LiveEditor";
 import { Crumbs } from "./PageView";
 
 export default function FieldNotesIndex() {
@@ -14,8 +15,10 @@ export default function FieldNotesIndex() {
   const [pageData, setPageData] = useState(null);
   const [list, setList] = useState(null);
   const [term, setTerm] = useState(q);
+  const [rev, setRev] = useState(0);
+  const orig = useRef(null);
 
-  useEffect(() => { api.get("/public/pages/field-notes").then((r) => setPageData(r.data.content)).catch(() => {}); }, []);
+  useEffect(() => { api.get("/public/pages/field-notes").then((r) => { setPageData(r.data.content); if (!orig.current) orig.current = r.data.content; }).catch(() => {}); }, []);
   useEffect(() => { api.get("/public/notes", { params: { q, category, page } }).then((r) => setList(Array.isArray(r.data?.items) ? r.data : { items: [], total: 0, page: 1, pages: 1 })).catch(() => setList({ items: [], total: 0, page: 1, pages: 1 })); }, [q, category, page]);
   useEffect(() => setTerm(q), [q]);
 
@@ -35,7 +38,8 @@ export default function FieldNotesIndex() {
   return (
     <div data-testid="page-field-notes">
       <Crumbs path="/field-notes" title="Field Notes" />
-      {pageData && <Blocks sections={pageData.sections} />}
+      {pageData && <Fragment key={rev}><Blocks sections={pageData.sections} /></Fragment>}
+      {pageData && <LiveEditor pageKey="field-notes" content={pageData} setContent={setPageData} original={orig.current} remount={() => setRev((r) => r + 1)} live />}
       <section className="wrap section" style={{ paddingTop: 0 }}>
         <form role="search" onSubmit={(e) => { e.preventDefault(); setParams(term ? { q: term, ...(category && { category }) } : category ? { category } : {}); }}
           style={{ display: "flex", gap: ".5rem", maxWidth: 560, marginBottom: "1.5rem" }} className="form-field">

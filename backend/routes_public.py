@@ -70,7 +70,7 @@ async def public_note(slug):
     if not related:
         related = (await list_notes(category=note.get("category", ""), per=3, exclude=slug))["items"]
     note["downloads"] = [d for d in note.get("downloads", []) if d.get("media")]
-    return {"note": note, "slug": slug, "published_at": n["published_at"], "updated_at": n["updated_at"], "related": related}
+    return {"note": note, "id": n["id"], "slug": slug, "published_at": n["published_at"], "updated_at": n["updated_at"], "related": related}
 
 
 @router.get("/public/site")

@@ -7,12 +7,27 @@ import { media } from "../../lib/api";
 import { useSite } from "../../lib/site";
 
 export const fontStack = (f) => `"${f}", system-ui, sans-serif`;
+const IMPORTANT_PROPS = ["fontFamily", "fontSize", "fontWeight", "fontStyle", "color", "textAlign", "textTransform", "lineHeight", "letterSpacing"];
+const toKebab = (p) => p.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase());
+function applyImportant(node, st) {
+  if (!node) return;
+  IMPORTANT_PROPS.forEach((p) => {
+    const v = st[p];
+    if (v !== undefined && v !== null && v !== "") node.style.setProperty(toKebab(p), v, "important");
+    else node.style.removeProperty(toKebab(p));
+  });
+}
 export function sx(s, field) {
-  const st = { ...(s?.styles?.[field] || {}) };
-  if (st.fontFamily) st.fontFamily = fontStack(st.fontFamily);
-  if (st.height && field !== "image") { st.minHeight = st.height; delete st.height; }
-  if (st.width) st.maxWidth = "100%";
-  return { "data-edit": field, style: Object.keys(st).length ? st : undefined };
+  const raw = { ...(s?.styles?.[field] || {}) };
+  if (raw.fontFamily) raw.fontFamily = fontStack(raw.fontFamily);
+  const style = {};
+  if (raw.width) { style.width = raw.width; style.maxWidth = "100%"; }
+  if (raw.height) { if (field === "image") style.height = raw.height; else style.minHeight = raw.height; }
+  return {
+    "data-edit": field,
+    style: Object.keys(style).length ? style : undefined,
+    ref: field === "image" ? undefined : (node) => applyImportant(node, raw),
+  };
 }
 const Html = ({ html, testid, ed }) => <div className="prose" data-testid={testid} {...ed} dangerouslySetInnerHTML={{ __html: html || "" }} />;
 const Eyebrow = ({ text, ed }) => (text ? <p className="eyebrow" {...ed}>{text}</p> : null);

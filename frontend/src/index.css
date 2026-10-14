@@ -1024,6 +1024,10 @@ body:not(.live-editing) .live-dev-tablet, body:not(.live-editing) .live-dev-mobi
 body.live-dev-tablet main, body.live-dev-mobile main { margin-inline: auto; transition: max-width .25s ease; box-shadow: 0 0 0 9999px rgba(20,22,20,.12); outline: 1px solid rgba(0,0,0,.15); }
 body.live-dev-tablet main { max-width: 768px; }
 body.live-dev-mobile main { max-width: 390px; }
+/* Editor UI must sit above the sticky public header */
+body.live-editing .header { z-index: 1; }
+.live-toggle, .live-add-menu { z-index: 100050; }
+.live-panel { z-index: 100050; }
 
 /* Workshops & Learning — client mockup (mint #DCEFE8) */
 .site:has(.page-workshops-learning) { --mint: #DCEFE8; --ruby: #D41445; }

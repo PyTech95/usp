@@ -25,6 +25,19 @@ const ADD_TYPES = [
 const px = (v) => (v ? parseInt(v, 10) : "");
 const newId = () => Math.random().toString(36).slice(2, 12);
 const clone = (o) => JSON.parse(JSON.stringify(o));
+const getPath = (obj, path) => path.split(".").reduce((o, k) => (o == null ? o : o[k]), obj);
+const setPath = (obj, path, val) => {
+  const keys = path.split(".");
+  const root = Array.isArray(obj) ? [...obj] : { ...obj };
+  let cur = root;
+  for (let i = 0; i < keys.length - 1; i++) {
+    const k = keys[i];
+    cur[k] = Array.isArray(cur[k]) ? [...cur[k]] : { ...(cur[k] || {}) };
+    cur = cur[k];
+  }
+  cur[keys[keys.length - 1]] = val;
+  return root;
+};
 const findSecEl = (id) => (id ? document.querySelector(`main [data-sec="${CSS.escape(id)}"]`) : null);
 const findEl = (sel) => {
   const s = findSecEl(sel?.sec);
@@ -75,7 +88,7 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
   const sec = sel && sections.find((s) => s.id === sel.sec);
   const field = sel?.field;
   const st = (sec?.styles || {})[field] || {};
-  const isText = TEXT_FIELDS.includes(field) && field !== "_section";
+  const isText = !!field && field !== "_section" && field !== "image" && !field.endsWith(".image");
 
   const commit = useCallback((nextSections, mark = true) => {
     setHist((h) => ({ past: [...h.past, content.sections].slice(-50), future: [] }));
@@ -155,8 +168,9 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
     el.contentEditable = "true";
     const commitText = () => {
       const s = sections.find((x) => x.id === sel.sec);
-      const v = field === "body_html" ? el.innerHTML : el.innerText.replace(/\n{3,}/g, "\n\n").trim();
-      if (s && v !== (s.data[field] || "")) { patchSec(sel.sec, (x) => ({ ...x, data: { ...x.data, [field]: v } })); remount(); }
+      if (!s) return;
+      const v = field.endsWith("_html") ? el.innerHTML : el.innerText.replace(/\n{3,}/g, "\n\n").trim();
+      if (v !== (getPath(s.data, field) || "")) { patchSec(sel.sec, (x) => ({ ...x, data: setPath(x.data, field, v) })); remount(); }
     };
     el.addEventListener("blur", commitText);
     return () => { el.removeEventListener("blur", commitText); el.removeAttribute("contenteditable"); };

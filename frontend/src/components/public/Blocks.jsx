@@ -104,9 +104,9 @@ function RelatedWork({ d, s, i }) {
           <article className={`work-card reveal d${k + 1}`} key={k} data-testid={`work-item-${k}`}>
             <Photo ref_={it.image} crop="4/5" sizes="(min-width: 860px) 24vw, 90vw" />
             <div className="work-card-body">
-              <span className="work-num" aria-hidden="true"><span className="wn-n">{String(k + 1).padStart(2, "0")}</span><span className="wn-sep"> — </span><span className="wn-t">{it.title}</span></span>
-              <h3 className="h3"><Link to={it.href || "#"}>{it.subtitle || it.title}</Link></h3>
-              <p>{it.text}</p>
+              <span className="work-num" aria-hidden="true"><span className="wn-n">{String(k + 1).padStart(2, "0")}</span><span className="wn-sep"> — </span><span className="wn-t" {...sx(s, `items.${k}.title`)}>{it.title}</span></span>
+              <h3 className="h3"><Link to={it.href || "#"}><span {...sx(s, `items.${k}.subtitle`)}>{it.subtitle || it.title}</span></Link></h3>
+              <p {...sx(s, `items.${k}.text`)}>{it.text}</p>
               <span className="more-link" aria-hidden="true">Explore <ArrowRight size={14} /></span>
             </div>
           </article>
@@ -116,15 +116,15 @@ function RelatedWork({ d, s, i }) {
   );
 }
 
-function NoteCards({ cards, id }) {
+function NoteCards({ cards, id, s }) {
   return (
     <div className="note-cards">
       {cards.map((c, k) => (
         <article className="note-card reveal" key={k} data-testid={`${id}-card-${k}`}>
           <Photo ref_={c.image} crop={c.crop} sizes="(min-width: 860px) 45vw, 100vw" />
-          {c.eyebrow && <p className="eyebrow">{c.eyebrow}</p>}
-          <h3 className="h3">{c.title}</h3>
-          {c.text && <p>{c.text}</p>}
+          {c.eyebrow && <p className="eyebrow" {...sx(s, `cards.${k}.eyebrow`)}>{c.eyebrow}</p>}
+          <h3 className="h3" {...sx(s, `cards.${k}.title`)}>{c.title}</h3>
+          {c.text && <p {...sx(s, `cards.${k}.text`)}>{c.text}</p>}
           <Link to={c.href || "/field-notes"} className="more-link" data-testid={`${id}-card-${k}-link`}>{c.link_label || "Read the Story"} <ArrowRight size={14} aria-hidden="true" /></Link>
         </article>
       ))}
@@ -234,7 +234,7 @@ function BlockInner({ s, first, i, home }) {
       <section className="wrap section" data-testid={id}>
         <Eyebrow text={d.eyebrow} ed={sx(s, "eyebrow")} />
         <SectionHead s={s} first={first} heading={d.heading} intro={d.intro} aside={<Link to={d.category ? `/field-notes?category=${encodeURIComponent(d.category)}` : "/field-notes"} className="more-link">All Field Notes <ArrowUpRight size={16} aria-hidden="true" /></Link>} />
-        {d.cards?.length ? <NoteCards cards={d.cards} id={id} /> : <NoteList items={s.notes || []} />}
+        {d.cards?.length ? <NoteCards cards={d.cards} id={id} s={s} /> : <NoteList items={s.notes || []} />}
         {d.more_label && <Link to={d.more_href || "/field-notes"} className="more-link notes-more" data-testid={`${id}-more`}>{d.more_label} <ArrowRight size={14} aria-hidden="true" /></Link>}
       </section>
     );

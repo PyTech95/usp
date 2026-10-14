@@ -1,5 +1,5 @@
 import { NavLink, Outlet, Link } from "react-router-dom";
-import { LayoutDashboard, FileText, NotebookPen, Images, Menu as MenuIcon, Palette, Inbox, Search, Users, Settings, LogOut, ExternalLink } from "lucide-react";
+import { LayoutDashboard, FileText, NotebookPen, Images, Menu as MenuIcon, Palette, Inbox, Search, Users, Settings, LogOut, ExternalLink, Wand2 } from "lucide-react";
 import { useAuth } from "../../lib/auth";
 
 const NAV = [
@@ -33,6 +33,15 @@ export default function AdminLayout() {
             </NavLink>
           ))}
         </nav>
+        {can("content.publish") && (
+          <div className="p-2 border-t">
+            <a href="/?edit=1" target="_blank" rel="noopener noreferrer" data-testid="admin-nav-live-editor"
+              className="flex items-center gap-2 px-3 py-2.5 text-sm font-semibold text-white bg-[#D41445] hover:bg-[#b30f39] transition-colors">
+              <Wand2 size={16} aria-hidden="true" /> Live Editor <ExternalLink size={12} aria-hidden="true" className="ml-auto" />
+            </a>
+            <p className="text-[11px] text-muted-foreground px-1 mt-1.5">Edit any page visually — drag to resize, move sections, change text, colours &amp; images. Changes go live on Save.</p>
+          </div>
+        )}
         <div className="p-3 border-t text-sm hidden md:block">
           <p className="truncate font-semibold" data-testid="admin-user-email">{user.email}</p>
           <p className="text-xs mb-2" data-testid="admin-user-role">{ROLE[user.role]}</p>

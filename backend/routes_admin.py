@@ -82,7 +82,9 @@ async def publish_page(key: str, user=Depends(require("content.publish"))):
     return await get_page(key)
 
 
-STYLE_KEYS = {"fontFamily", "fontSize", "fontWeight", "color", "textAlign", "width", "height", "lineHeight", "letterSpacing"}
+STYLE_KEYS = {"fontFamily", "fontSize", "fontWeight", "fontStyle", "color", "backgroundColor", "textAlign", "textTransform",
+              "width", "height", "maxWidth", "lineHeight", "letterSpacing", "borderRadius", "opacity",
+              "paddingTop", "paddingBottom", "paddingLeft", "paddingRight", "marginTop", "marginBottom", "objectPosition"}
 
 
 def clean_styles(styles):
@@ -95,21 +97,38 @@ def clean_styles(styles):
     return out
 
 
+def strip_resolved(obj):
+    """Remove server-resolved fields (media/notes) so they are not persisted; they are re-attached on read."""
+    if isinstance(obj, dict):
+        return {k: strip_resolved(v) for k, v in obj.items() if k not in ("media", "original", "edit_note")}
+    if isinstance(obj, list):
+        return [strip_resolved(x) for x in obj]
+    return obj
+
+
 @router.put("/pages/{key}/live")
 async def live_save(key: str, body: dict, user=Depends(require("content.publish"))):
+    """Advanced live editor: accepts the full ordered section list and publishes it immediately."""
     p = await get_page(key)
-    edits = {s.get("id"): s for s in body.get("sections", []) if s.get("id")}
-    pub = p["published"]
-    for s in pub["sections"]:
-        e = edits.get(s["id"])
-        if e:
-            s["data"] = e.get("data", s["data"])
-            s["styles"] = clean_styles(e.get("styles"))
+    sections = body.get("sections")
+    if not isinstance(sections, list):
+        raise HTTPException(400, "No sections provided")
+    clean = []
+    for s in sections:
+        if s.get("type") not in SECTION_TYPES:
+            raise HTTPException(400, f"Unknown section type {s.get('type')}")
+        clean.append({
+            "id": s.get("id") or new_id(),
+            "type": s["type"],
+            "hidden": bool(s.get("hidden")),
+            "data": strip_resolved(s.get("data") or {}),
+            "styles": clean_styles(s.get("styles")),
+        })
+    pub = {**p["published"], "sections": clean}
+    if body.get("title"):
+        pub["title"] = str(body["title"]).strip()[:200] or pub.get("title", "Untitled")
     pub = sanitize_tree(pub)
-    draft = p["draft"]
-    by_id = {s["id"]: s for s in pub["sections"]}
-    draft["sections"] = [by_id.get(s.get("id"), s) for s in draft["sections"]]
-    await db.pages.update_one({"key": key}, {"$set": {"published": pub, "draft": draft, "published_at": now(), "updated_at": now()}})
+    await db.pages.update_one({"key": key}, {"$set": {"published": pub, "draft": pub, "published_at": now(), "updated_at": now(), "has_unpublished_changes": False}})
     await snapshot("page", key, pub, "live edit published", user)
     return {"key": key, "content": await resolve_media_tree(pub)}
 

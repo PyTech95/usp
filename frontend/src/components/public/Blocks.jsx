@@ -121,8 +121,9 @@ export function Block(props) {
   const d = props.s.data || {};
   const t = props.s.type;
   const el = <BlockInner {...props} />;
-  if (!d.band && !d.anchor) return <div className={`hb hb-${t}`} data-block-type={t} data-sec={props.s.id}>{el}</div>;
-  return <div id={d.anchor || undefined} className={`hb hb-${t} ${d.band ? "band" : ""}`} data-block-type={t} data-sec={props.s.id} data-testid={`block-${props.i}-wrap`}>{el}</div>;
+  const secStyle = props.s?.styles?._section;
+  const style = secStyle && Object.keys(secStyle).length ? secStyle : undefined;
+  return <div id={d.anchor || undefined} className={`hb hb-${t} ${d.band ? "band" : ""}`} data-block-type={t} data-sec={props.s.id} style={style} data-testid={`block-${props.i}-wrap`}>{el}</div>;
 }
 
 function TextBlock({ d, s, first, id }) {

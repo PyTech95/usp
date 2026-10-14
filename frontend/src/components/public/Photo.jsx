@@ -14,7 +14,16 @@ export function Photo({ ref_, eager = false, sizes = "(min-width: 1024px) 58vw, 
   const preview = usePreview();
   const [showOriginal, setShowOriginal] = useState(false);
   const m = ref_?.media;
-  if (!m) return preview ? <Pending ref_={ref_} testid={testid} /> : null;
+  if (!m) {
+    if (preview) return <Pending ref_={ref_} testid={testid} />;
+    if (ed?.["data-edit"] && typeof document !== "undefined" && document.body.classList.contains("live-editing"))
+      return (
+        <figure className={`photo photo-addslot ${className}`} data-testid={testid} data-edit={ed["data-edit"]}>
+          <div className="photo-frame"><span>Click to add an image</span></div>
+        </figure>
+      );
+    return null;
+  }
   const shown = showOriginal && m.original ? m.original : m;
   const caption = ref_.caption || m.caption;
   const style = {

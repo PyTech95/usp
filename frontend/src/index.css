@@ -999,6 +999,14 @@ body.live-editing main [data-edit][contenteditable="true"] { cursor: text; outli
 .live-h-sw { bottom: -10px; left: -10px; width: 16px; height: 16px; cursor: nesw-resize; }
 .live-move-grip { position: absolute; top: -28px; left: 50%; transform: translateX(-50%); display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 20px; background: #2d302b; color: #fff; border-radius: 5px; border: 2px solid #fff; pointer-events: auto; cursor: move; box-shadow: 0 4px 12px rgba(0,0,0,.28); z-index: 3; touch-action: none; }
 .live-move-grip:hover { background: #D41445; }
+.live-dim { position: absolute; display: inline-flex; align-items: center; gap: 2px; background: #2d302b; color: #fff; border-radius: 4px; padding: 2px 4px; font-size: 11px; line-height: 1; pointer-events: auto; z-index: 2; box-shadow: 0 2px 8px rgba(0,0,0,.28); }
+.live-dim input { width: 34px; border: 0; background: transparent; color: #fff; font-size: 11px; padding: 0; text-align: center; -moz-appearance: textfield; }
+.live-dim input::placeholder { color: rgba(255,255,255,.55); }
+.live-dim input::-webkit-outer-spin-button, .live-dim input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.live-dim-up { top: 3px; left: 50%; transform: translateX(-50%); }
+.live-dim-down { bottom: 3px; left: 50%; transform: translateX(-50%); }
+.live-dim-left { left: 3px; top: 50%; transform: translateY(-50%); }
+.live-dim-right { right: 3px; top: 50%; transform: translateY(-50%); }
 .live-panel { position: fixed; top: 12px; right: 12px; width: 300px; max-height: calc(100vh - 24px); z-index: 100001; background: #fff; border: 1px solid #ddd; box-shadow: 0 10px 40px rgba(0,0,0,.22); padding: 14px; overflow-y: auto; font-size: 13px; color: #2d302b; border-radius: 8px; }
 .live-drag { flex: 1; display: inline-flex; align-items: center; gap: 6px; cursor: move; user-select: none; touch-action: none; }
 .live-row { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 10px; flex-wrap: wrap; }

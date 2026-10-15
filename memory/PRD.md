@@ -160,3 +160,8 @@ Await client content and permissions; then record approvals in Media Library and
 - `Photo.jsx`: figure now also honours transform/position/alignSelf/justifySelf/zIndex from `ed.style`, so images can be freely moved/resized too.
 - `routes_admin.py`: `STYLE_KEYS` += `translateX`, `translateY` (persisted by PUT /pages/{key}/live). Verified via curl round-trip.
 - Testing: testing_agent iteration_4 — 100% frontend pass. Neighbour image bounding rect stayed byte-identical across all 8 resize directions, move-grip drag and numeric X/Y/W/H changes on the sibling text (the reported bug is resolved). Anonymous users still never see the editor. Pages left in clean state after tests.
+
+## Update 2026-06 — on-element directional distance badges
+- User: when any section/element is selected, an on-element "number view" should show how many px to move up/down/left/right, and work 100%.
+- `LiveEditor.jsx`: added a `Dim` component rendering four editable pixel badges pinned inside the selection box (`live-dim-up/down/left/right`, inputs `*-input`), each with an arrow icon. Up/Down map to −/+ translateY, Left/Right to −/+ translateX (mutually exclusive per axis), live-synced with drag and the panel Move X/Y. `index.css`: `.live-dim*` styles position them at the four side-centres.
+- Self-verified via Playwright (logged-in owner, /our-work/rakhigarhi?edit=1): all four badges render on the selected heading; typing 25 in the Up badge applied `transform: matrix(1,0,0,1,0,-25)` and synced the panel Move Y to −25. No save performed, page left clean.

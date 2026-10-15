@@ -4,6 +4,7 @@ import {
   Pencil, X, Save, Upload, Images, RotateCcw, AlignLeft, AlignCenter, AlignRight,
   ArrowUp, ArrowDown, Copy, Trash2, Eye, EyeOff, Plus, Undo2, Redo2, Bold, Italic,
   Monitor, Tablet, Smartphone, Type, Paintbrush, Square, LayoutGrid, GripVertical,
+  ArrowLeft, ArrowRight,
 } from "lucide-react";
 import { api, errMsg } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
@@ -294,6 +295,10 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
           <span className="live-handle live-h-nw" onPointerDown={resize("nw")} data-testid="live-resize-nw" />
           <span className="live-handle live-h-se" onPointerDown={resize("se")} data-testid="live-resize-se" />
           <span className="live-handle live-h-sw" onPointerDown={resize("sw")} data-testid="live-resize-sw" />
+          <Dim cls="live-dim-up" icon={ArrowUp} value={num(st.translateY) < 0 ? -num(st.translateY) : 0} onSet={(v) => setStyles({ translateY: v ? `-${v}px` : "" })} testid="live-dim-up" />
+          <Dim cls="live-dim-down" icon={ArrowDown} value={num(st.translateY) > 0 ? num(st.translateY) : 0} onSet={(v) => setStyles({ translateY: v ? `${v}px` : "" })} testid="live-dim-down" />
+          <Dim cls="live-dim-left" icon={ArrowLeft} value={num(st.translateX) < 0 ? -num(st.translateX) : 0} onSet={(v) => setStyles({ translateX: v ? `-${v}px` : "" })} testid="live-dim-left" />
+          <Dim cls="live-dim-right" icon={ArrowRight} value={num(st.translateX) > 0 ? num(st.translateX) : 0} onSet={(v) => setStyles({ translateX: v ? `${v}px` : "" })} testid="live-dim-right" />
           {sec && (
             <div className="live-sectools" data-testid="live-section-tools">
               <button type="button" title="Move up" onClick={() => move(sec.id, -1)} data-testid="live-sec-up"><ArrowUp size={14} /></button>
@@ -434,6 +439,15 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
         </div>
       )}
     </>
+  );
+}
+
+function Dim({ cls, icon: Icon, value, onSet, testid }) {
+  return (
+    <span className={`live-dim ${cls}`} data-testid={testid} title="Pixels to move in this direction">
+      <Icon size={11} />
+      <input type="number" min="0" value={value || ""} placeholder="0" onChange={(e) => onSet(Math.max(0, parseInt(e.target.value, 10) || 0))} data-testid={`${testid}-input`} />
+    </span>
   );
 }
 

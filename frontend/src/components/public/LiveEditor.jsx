@@ -101,6 +101,9 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
   const field = sel?.field;
   const st = (sec?.styles || {})[field] || {};
   const isText = !!field && field !== "_section" && field !== "image" && !field.endsWith(".image");
+  const selEl = on && sel ? findEl(sel) : null;
+  const cstyle = selEl ? window.getComputedStyle(selEl) : null;
+  const padPH = (p) => (cstyle ? String(Math.round(parseFloat(cstyle[p]) || 0)) : "0");
 
   const commit = useCallback((nextSections, mark = true) => {
     setHist((h) => ({ past: [...h.past, content.sections].slice(-50), future: [] }));
@@ -384,6 +387,15 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
                 <div className="live-row">
                   <label className="live-field">Move X (px)<input type="number" value={px(st.translateX)} placeholder="0" onChange={(e) => setStyles({ translateX: e.target.value ? `${e.target.value}px` : "" })} data-testid="live-move-x" /></label>
                   <label className="live-field">Move Y (px)<input type="number" value={px(st.translateY)} placeholder="0" onChange={(e) => setStyles({ translateY: e.target.value ? `${e.target.value}px` : "" })} data-testid="live-move-y" /></label>
+                </div>
+                <p className="live-label" style={{ marginTop: 4 }}>Padding inside box (px)</p>
+                <div className="live-row">
+                  <label className="live-field">Top<input type="number" value={px(st.paddingTop)} placeholder={padPH("paddingTop")} onChange={(e) => setStyles({ paddingTop: e.target.value ? `${e.target.value}px` : "" })} data-testid="live-pad-top" /></label>
+                  <label className="live-field">Bottom<input type="number" value={px(st.paddingBottom)} placeholder={padPH("paddingBottom")} onChange={(e) => setStyles({ paddingBottom: e.target.value ? `${e.target.value}px` : "" })} data-testid="live-pad-bottom" /></label>
+                </div>
+                <div className="live-row">
+                  <label className="live-field">Left<input type="number" value={px(st.paddingLeft)} placeholder={padPH("paddingLeft")} onChange={(e) => setStyles({ paddingLeft: e.target.value ? `${e.target.value}px` : "" })} data-testid="live-pad-left" /></label>
+                  <label className="live-field">Right<input type="number" value={px(st.paddingRight)} placeholder={padPH("paddingRight")} onChange={(e) => setStyles({ paddingRight: e.target.value ? `${e.target.value}px` : "" })} data-testid="live-pad-right" /></label>
                 </div>
               </>
             )}

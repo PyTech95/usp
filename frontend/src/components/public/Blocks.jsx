@@ -8,7 +8,7 @@ import { useSite } from "../../lib/site";
 
 export const fontStack = (f) => `"${f}", system-ui, sans-serif`;
 const IMPORTANT_PROPS = ["fontFamily", "fontSize", "fontWeight", "fontStyle", "color", "textAlign", "textTransform", "lineHeight", "letterSpacing"];
-const LAYOUT_PROPS = ["width", "maxWidth", "height", "overflow", "transform", "position", "alignSelf", "justifySelf", "zIndex"];
+const LAYOUT_PROPS = ["width", "maxWidth", "height", "overflow", "transform", "position", "alignSelf", "justifySelf", "zIndex", "paddingTop", "paddingBottom", "paddingLeft", "paddingRight"];
 const toKebab = (p) => p.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase());
 function applyProps(node, obj, keys) {
   if (!node) return;
@@ -27,6 +27,7 @@ export function layoutStyle(raw, field) {
   if (raw.height) { o.height = raw.height; if (field !== "image") o.overflow = "visible"; }
   if (tx || ty) { o.transform = `translate(${tx || "0px"}, ${ty || "0px"})`; o.zIndex = 5; }
   if (raw.width || raw.height || tx || ty) { o.position = "relative"; o.alignSelf = "flex-start"; o.justifySelf = "start"; }
+  ["paddingTop", "paddingBottom", "paddingLeft", "paddingRight"].forEach((k) => { if (raw[k]) o[k] = raw[k]; });
   return o;
 }
 export function sx(s, field) {
@@ -43,7 +44,7 @@ export function sx(s, field) {
 function secStyleOf(raw) {
   if (!raw || !Object.keys(raw).length) return undefined;
   const o = {};
-  ["backgroundColor", "paddingTop", "paddingBottom", "paddingLeft", "paddingRight", "marginTop", "marginBottom", "borderRadius"].forEach((k) => { if (raw[k]) o[k] = raw[k]; });
+  ["backgroundColor", "marginTop", "marginBottom", "borderRadius"].forEach((k) => { if (raw[k]) o[k] = raw[k]; });
   Object.assign(o, layoutStyle(raw, "_section"));
   return Object.keys(o).length ? o : undefined;
 }

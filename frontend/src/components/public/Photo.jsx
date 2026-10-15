@@ -37,6 +37,10 @@ export function Photo({ ref_, eager = false, sizes = "(min-width: 1024px) 58vw, 
     ...(es.alignSelf ? { alignSelf: es.alignSelf } : {}),
     ...(es.justifySelf ? { justifySelf: es.justifySelf } : {}),
     ...(es.zIndex ? { zIndex: es.zIndex } : {}),
+    ...(es.paddingTop ? { paddingTop: es.paddingTop } : {}),
+    ...(es.paddingBottom ? { paddingBottom: es.paddingBottom } : {}),
+    ...(es.paddingLeft ? { paddingLeft: es.paddingLeft } : {}),
+    ...(es.paddingRight ? { paddingRight: es.paddingRight } : {}),
   };
   const imgStyle = es.height ? { height: es.height, width: "100%", aspectRatio: "auto", objectFit: "cover" } : undefined;
   return (

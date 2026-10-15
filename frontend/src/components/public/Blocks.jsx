@@ -8,26 +8,44 @@ import { useSite } from "../../lib/site";
 
 export const fontStack = (f) => `"${f}", system-ui, sans-serif`;
 const IMPORTANT_PROPS = ["fontFamily", "fontSize", "fontWeight", "fontStyle", "color", "textAlign", "textTransform", "lineHeight", "letterSpacing"];
+const LAYOUT_PROPS = ["width", "maxWidth", "height", "overflow", "transform", "position", "alignSelf", "justifySelf", "zIndex"];
 const toKebab = (p) => p.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase());
-function applyImportant(node, st) {
+function applyProps(node, obj, keys) {
   if (!node) return;
-  IMPORTANT_PROPS.forEach((p) => {
-    const v = st[p];
-    if (v !== undefined && v !== null && v !== "") node.style.setProperty(toKebab(p), v, "important");
+  keys.forEach((p) => {
+    const v = obj[p];
+    if (v !== undefined && v !== null && v !== "") node.style.setProperty(toKebab(p), String(v), "important");
     else node.style.removeProperty(toKebab(p));
   });
+}
+function applyImportant(node, st) { applyProps(node, st, IMPORTANT_PROPS); }
+// Build the free-form layout (size + float position) from editor style values.
+export function layoutStyle(raw, field) {
+  const o = {};
+  const tx = raw.translateX, ty = raw.translateY;
+  if (raw.width) { o.width = raw.width; o.maxWidth = "none"; }
+  if (raw.height) { o.height = raw.height; if (field !== "image") o.overflow = "visible"; }
+  if (tx || ty) { o.transform = `translate(${tx || "0px"}, ${ty || "0px"})`; o.zIndex = 5; }
+  if (raw.width || raw.height || tx || ty) { o.position = "relative"; o.alignSelf = "flex-start"; o.justifySelf = "start"; }
+  return o;
 }
 export function sx(s, field) {
   const raw = { ...(s?.styles?.[field] || {}) };
   if (raw.fontFamily) raw.fontFamily = fontStack(raw.fontFamily);
-  const style = {};
-  if (raw.width) { style.width = raw.width; style.maxWidth = "100%"; }
-  if (raw.height) { if (field === "image") style.height = raw.height; else style.minHeight = raw.height; }
+  const style = layoutStyle(raw, field);
   return {
     "data-edit": field,
     style: Object.keys(style).length ? style : undefined,
-    ref: field === "image" ? undefined : (node) => applyImportant(node, raw),
+    ref: field === "image" ? undefined : (node) => { applyImportant(node, raw); applyProps(node, style, LAYOUT_PROPS); },
   };
+}
+// Section-wrapper style: visual props + free-form layout (translate -> transform).
+function secStyleOf(raw) {
+  if (!raw || !Object.keys(raw).length) return undefined;
+  const o = {};
+  ["backgroundColor", "paddingTop", "paddingBottom", "paddingLeft", "paddingRight", "marginTop", "marginBottom", "borderRadius"].forEach((k) => { if (raw[k]) o[k] = raw[k]; });
+  Object.assign(o, layoutStyle(raw, "_section"));
+  return Object.keys(o).length ? o : undefined;
 }
 const Html = ({ html, testid, ed }) => <div className="prose" data-testid={testid} {...ed} dangerouslySetInnerHTML={{ __html: html || "" }} />;
 const Eyebrow = ({ text, ed }) => (text ? <p className="eyebrow" {...ed}>{text}</p> : null);
@@ -137,7 +155,7 @@ export function Block(props) {
   const t = props.s.type;
   const el = <BlockInner {...props} />;
   const secStyle = props.s?.styles?._section;
-  const style = secStyle && Object.keys(secStyle).length ? secStyle : undefined;
+  const style = secStyleOf(secStyle);
   const hasBg = !!secStyle?.backgroundColor;
   return <div id={d.anchor || undefined} className={`hb hb-${t} ${d.band ? "band" : ""} ${hasBg ? "hb-bg" : ""}`} data-block-type={t} data-sec={props.s.id} style={style} data-testid={`block-${props.i}-wrap`}>{el}</div>;
 }

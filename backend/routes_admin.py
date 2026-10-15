@@ -84,7 +84,8 @@ async def publish_page(key: str, user=Depends(require("content.publish"))):
 
 STYLE_KEYS = {"fontFamily", "fontSize", "fontWeight", "fontStyle", "color", "backgroundColor", "textAlign", "textTransform",
               "width", "height", "maxWidth", "lineHeight", "letterSpacing", "borderRadius", "opacity",
-              "paddingTop", "paddingBottom", "paddingLeft", "paddingRight", "marginTop", "marginBottom", "objectPosition"}
+              "paddingTop", "paddingBottom", "paddingLeft", "paddingRight", "marginTop", "marginBottom", "objectPosition",
+              "translateX", "translateY"}
 
 
 def clean_styles(styles):

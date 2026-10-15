@@ -26,13 +26,19 @@ export function Photo({ ref_, eager = false, sizes = "(min-width: 1024px) 58vw, 
   }
   const shown = showOriginal && m.original ? m.original : m;
   const caption = ref_.caption || m.caption;
+  const es = ed?.style || {};
   const style = {
     "--fx-d": `${m.focal_desktop.x}%`, "--fy-d": `${m.focal_desktop.y}%`,
     "--fx-m": `${m.focal_mobile.x}%`, "--fy-m": `${m.focal_mobile.y}%`,
     ...(crop ? { "--ratio": crop } : {}), ...(cropMobile ? { "--ratio-m": cropMobile } : {}), ...(small ? { maxWidth: 420 } : {}),
-    ...(ed?.style?.width ? { width: ed.style.width, maxWidth: "100%" } : {}),
+    ...(es.width ? { width: es.width, maxWidth: es.maxWidth || "100%" } : {}),
+    ...(es.transform ? { transform: es.transform } : {}),
+    ...(es.position ? { position: es.position } : {}),
+    ...(es.alignSelf ? { alignSelf: es.alignSelf } : {}),
+    ...(es.justifySelf ? { justifySelf: es.justifySelf } : {}),
+    ...(es.zIndex ? { zIndex: es.zIndex } : {}),
   };
-  const imgStyle = ed?.style?.height ? { height: ed.style.height, width: "100%", aspectRatio: "auto", objectFit: "cover" } : undefined;
+  const imgStyle = es.height ? { height: es.height, width: "100%", aspectRatio: "auto", objectFit: "cover" } : undefined;
   return (
     <figure className={`photo ${crop ? "crop" : ""} ${framed ? "framed" : ""} ${className}`} style={style} data-testid={testid} data-edit={ed?.["data-edit"]}>
       <div className="photo-frame">

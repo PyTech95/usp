@@ -989,9 +989,16 @@ body.live-editing main [data-edit][contenteditable="true"] { cursor: text; outli
 .live-toggle:hover { transform: translateY(-2px); }
 .live-box { position: fixed; z-index: 100000; outline: 2px solid #D41445; outline-offset: 3px; pointer-events: none; }
 .live-handle { position: absolute; background: #D41445; pointer-events: auto; border: 2px solid #fff; }
-.live-h-r { right: -9px; top: 50%; width: 12px; height: 28px; margin-top: -14px; cursor: ew-resize; }
-.live-h-b { bottom: -9px; left: 50%; width: 28px; height: 12px; margin-left: -14px; cursor: ns-resize; }
-.live-h-c { right: -10px; bottom: -10px; width: 16px; height: 16px; cursor: nwse-resize; }
+.live-h-n { top: -9px; left: 50%; width: 28px; height: 12px; margin-left: -14px; cursor: ns-resize; }
+.live-h-s { bottom: -9px; left: 50%; width: 28px; height: 12px; margin-left: -14px; cursor: ns-resize; }
+.live-h-e { right: -9px; top: 50%; width: 12px; height: 28px; margin-top: -14px; cursor: ew-resize; }
+.live-h-w { left: -9px; top: 50%; width: 12px; height: 28px; margin-top: -14px; cursor: ew-resize; }
+.live-h-ne { top: -10px; right: -10px; width: 16px; height: 16px; cursor: nesw-resize; }
+.live-h-nw { top: -10px; left: -10px; width: 16px; height: 16px; cursor: nwse-resize; }
+.live-h-se { bottom: -10px; right: -10px; width: 16px; height: 16px; cursor: nwse-resize; }
+.live-h-sw { bottom: -10px; left: -10px; width: 16px; height: 16px; cursor: nesw-resize; }
+.live-move-grip { position: absolute; top: -28px; left: 50%; transform: translateX(-50%); display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 20px; background: #2d302b; color: #fff; border-radius: 5px; border: 2px solid #fff; pointer-events: auto; cursor: move; box-shadow: 0 4px 12px rgba(0,0,0,.28); z-index: 3; touch-action: none; }
+.live-move-grip:hover { background: #D41445; }
 .live-panel { position: fixed; top: 12px; right: 12px; width: 300px; max-height: calc(100vh - 24px); z-index: 100001; background: #fff; border: 1px solid #ddd; box-shadow: 0 10px 40px rgba(0,0,0,.22); padding: 14px; overflow-y: auto; font-size: 13px; color: #2d302b; border-radius: 8px; }
 .live-drag { flex: 1; display: inline-flex; align-items: center; gap: 6px; cursor: move; user-select: none; touch-action: none; }
 .live-row { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 10px; flex-wrap: wrap; }

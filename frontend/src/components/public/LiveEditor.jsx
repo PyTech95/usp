@@ -235,13 +235,28 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
     if (dirty) { setContent(base); setDirty(false); remount(); }
     setSel(null); setDevice("desktop"); setOn(false);
   };
-  const drag = (mode) => (e) => {
-    e.preventDefault();
-    const start = { x: e.clientX, y: e.clientY, w: rect.width, h: rect.height };
-    const mv = (ev) => setStyles({
-      ...(mode !== "h" ? { width: `${Math.max(40, Math.round(start.w + ev.clientX - start.x))}px` } : {}),
-      ...(mode !== "w" ? { height: `${Math.max(30, Math.round(start.h + ev.clientY - start.y))}px` } : {}),
-    });
+  const num = (v) => (v ? parseInt(v, 10) || 0 : 0);
+  const resize = (dir) => (e) => {
+    e.preventDefault(); e.stopPropagation();
+    if (!rect) return;
+    const sx0 = e.clientX, sy0 = e.clientY, w0 = rect.width, h0 = rect.height;
+    const tx0 = num(st.translateX), ty0 = num(st.translateY);
+    const mv = (ev) => {
+      const dx = ev.clientX - sx0, dy = ev.clientY - sy0;
+      const patch = {};
+      if (dir.includes("e")) patch.width = `${Math.max(40, Math.round(w0 + dx))}px`;
+      if (dir.includes("w")) { const nw = Math.max(40, Math.round(w0 - dx)); patch.width = `${nw}px`; patch.translateX = `${tx0 + (w0 - nw)}px`; }
+      if (dir.includes("s")) patch.height = `${Math.max(20, Math.round(h0 + dy))}px`;
+      if (dir.includes("n")) { const nh = Math.max(20, Math.round(h0 - dy)); patch.height = `${nh}px`; patch.translateY = `${ty0 + (h0 - nh)}px`; }
+      setStyles(patch);
+    };
+    const up = () => { window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up); };
+    window.addEventListener("pointermove", mv); window.addEventListener("pointerup", up);
+  };
+  const moveDrag = (e) => {
+    e.preventDefault(); e.stopPropagation();
+    const sx0 = e.clientX, sy0 = e.clientY, tx0 = num(st.translateX), ty0 = num(st.translateY);
+    const mv = (ev) => setStyles({ translateX: `${tx0 + ev.clientX - sx0}px`, translateY: `${ty0 + ev.clientY - sy0}px` });
     const up = () => { window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up); };
     window.addEventListener("pointermove", mv); window.addEventListener("pointerup", up);
   };
@@ -267,11 +282,15 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
     <>
       {rect && (
         <div className={`live-ui live-box ${field === "_section" ? "live-box-sec" : ""}`} style={{ top: rect.top, left: rect.left, width: rect.width, height: rect.height }} data-testid="live-selection-box">
-          {field !== "_section" && (<>
-            <span className="live-handle live-h-r" onPointerDown={drag("w")} data-testid="live-resize-width" />
-            <span className="live-handle live-h-b" onPointerDown={drag("h")} data-testid="live-resize-height" />
-            <span className="live-handle live-h-c" onPointerDown={drag("both")} data-testid="live-resize-corner" />
-          </>)}
+          <span className="live-move-grip" onPointerDown={moveDrag} title="Drag to move anywhere" data-testid="live-move-grip"><GripVertical size={13} /></span>
+          <span className="live-handle live-h-n" onPointerDown={resize("n")} data-testid="live-resize-n" />
+          <span className="live-handle live-h-s" onPointerDown={resize("s")} data-testid="live-resize-s" />
+          <span className="live-handle live-h-e" onPointerDown={resize("e")} data-testid="live-resize-e" />
+          <span className="live-handle live-h-w" onPointerDown={resize("w")} data-testid="live-resize-w" />
+          <span className="live-handle live-h-ne" onPointerDown={resize("ne")} data-testid="live-resize-ne" />
+          <span className="live-handle live-h-nw" onPointerDown={resize("nw")} data-testid="live-resize-nw" />
+          <span className="live-handle live-h-se" onPointerDown={resize("se")} data-testid="live-resize-se" />
+          <span className="live-handle live-h-sw" onPointerDown={resize("sw")} data-testid="live-resize-sw" />
           {sec && (
             <div className="live-sectools" data-testid="live-section-tools">
               <button type="button" title="Move up" onClick={() => move(sec.id, -1)} data-testid="live-sec-up"><ArrowUp size={14} /></button>
@@ -301,7 +320,7 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
         </div>
 
         {!sel || !sec ? (
-          <p className="live-hint" data-testid="live-hint">Click any heading, text, image or section on the page to edit it. Drag the red handles to resize. Use the tools on a selection to move, duplicate, hide, delete or add sections. Press Save to publish your changes live.</p>
+          <p className="live-hint" data-testid="live-hint">Click any heading, text, image or whole section on the page. Drag the dark grip to move it anywhere (up, down, left, right), or drag any of the 8 red handles to resize from every side. Use the numeric Move X/Y and Width/Height boxes for precise control. Press Save to publish live.</p>
         ) : (
           <div data-testid="live-controls">
             <p className="live-label" data-testid="live-selected-label">{labelFor(field)}</p>
@@ -348,11 +367,17 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
               </div>
             </>)}
 
-            {(field === "image" || isText) && (
-              <div className="live-row">
-                <label className="live-field">Width (px)<input type="number" value={px(st.width)} placeholder="auto" onChange={(e) => setStyles({ width: e.target.value ? `${e.target.value}px` : "" })} data-testid="live-width" /></label>
-                <label className="live-field">Height (px)<input type="number" value={px(st.height)} placeholder="auto" onChange={(e) => setStyles({ height: e.target.value ? `${e.target.value}px` : "" })} data-testid="live-height" /></label>
-              </div>
+            {(field === "image" || isText || field === "_section") && (
+              <>
+                <div className="live-row">
+                  <label className="live-field">Width (px)<input type="number" value={px(st.width)} placeholder="auto" onChange={(e) => setStyles({ width: e.target.value ? `${e.target.value}px` : "" })} data-testid="live-width" /></label>
+                  <label className="live-field">Height (px)<input type="number" value={px(st.height)} placeholder="auto" onChange={(e) => setStyles({ height: e.target.value ? `${e.target.value}px` : "" })} data-testid="live-height" /></label>
+                </div>
+                <div className="live-row">
+                  <label className="live-field">Move X (px)<input type="number" value={px(st.translateX)} placeholder="0" onChange={(e) => setStyles({ translateX: e.target.value ? `${e.target.value}px` : "" })} data-testid="live-move-x" /></label>
+                  <label className="live-field">Move Y (px)<input type="number" value={px(st.translateY)} placeholder="0" onChange={(e) => setStyles({ translateY: e.target.value ? `${e.target.value}px` : "" })} data-testid="live-move-y" /></label>
+                </div>
+              </>
             )}
 
             <div className="live-sec-style">
@@ -366,6 +391,7 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
 
             <div className="live-row" style={{ marginTop: 10 }}>
               <button type="button" className="live-btn" onClick={() => setStyles({ width: "", height: "" })} data-testid="live-reset-size"><RotateCcw size={14} /> Reset size</button>
+              <button type="button" className="live-btn" onClick={() => setStyles({ translateX: "", translateY: "" })} data-testid="live-reset-pos"><RotateCcw size={14} /> Reset position</button>
               <button type="button" className="live-btn" onClick={() => patchSec(sel.sec, (s) => ({ ...s, styles: { ...(s.styles || {}), [field]: {} } }))} data-testid="live-reset-style"><RotateCcw size={14} /> Clear styles</button>
             </div>
           </div>

@@ -4,7 +4,7 @@ import {
   Pencil, X, Save, Upload, Images, RotateCcw, AlignLeft, AlignCenter, AlignRight,
   ArrowUp, ArrowDown, Copy, Trash2, Eye, EyeOff, Plus, Undo2, Redo2, Bold, Italic,
   Monitor, Tablet, Smartphone, Type, Paintbrush, Square, LayoutGrid, GripVertical,
-  ArrowLeft, ArrowRight,
+  ArrowLeft, ArrowRight, Lock, Unlock, ClipboardPaste,
 } from "lucide-react";
 import { api, errMsg } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
@@ -95,6 +95,9 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
   const [hist, setHist] = useState({ past: [], future: [] });
   const [pos, setPos] = useState(null);
   const [guides, setGuides] = useState([]);
+  const [clip, setClip] = useState(null);
+  const [padLock, setPadLock] = useState(false);
+  const [marLock, setMarLock] = useState(false);
   const fileRef = useRef(null);
 
   const sections = content.sections;
@@ -248,16 +251,19 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
       if (!exclude || el === exclude || exclude.contains(el) || el.contains(exclude)) return;
       const r = el.getBoundingClientRect();
       if (r.width < 2 || r.height < 2) return;
-      xs.push(r.left, r.right, r.left + r.width / 2);
-      ys.push(r.top, r.bottom, r.top + r.height / 2);
+      xs.push({ v: r.left, r }, { v: r.right, r }, { v: r.left + r.width / 2, r });
+      ys.push({ v: r.top, r }, { v: r.bottom, r }, { v: r.top + r.height / 2, r });
     });
     return { xs, ys };
   };
   const nearest = (val, cands) => {
     let best = null, bd = SNAP;
-    for (const c of cands) { const d = Math.abs(val - c); if (d <= bd) { bd = d; best = c; } }
+    for (const c of cands) { const d = Math.abs(val - c.v); if (d <= bd) { bd = d; best = c; } }
     return best;
   };
+  // vertical guide (matched x) + distance to neighbour along y ; horizontal guide (matched y) + distance along x
+  const vGuide = (c, dt, db) => { const nr = c.r; let dist, at; if (dt >= nr.bottom) { dist = Math.round(dt - nr.bottom); at = (nr.bottom + dt) / 2; } else if (nr.top >= db) { dist = Math.round(nr.top - db); at = (db + nr.top) / 2; } else { dist = 0; at = (Math.max(dt, nr.top) + Math.min(db, nr.bottom)) / 2; } return { x: c.v, dist, at }; };
+  const hGuide = (c, dl, dr) => { const nr = c.r; let dist, at; if (dl >= nr.right) { dist = Math.round(dl - nr.right); at = (nr.right + dl) / 2; } else if (nr.left >= dr) { dist = Math.round(nr.left - dr); at = (dr + nr.left) / 2; } else { dist = 0; at = (Math.max(dl, nr.left) + Math.min(dr, nr.right)) / 2; } return { y: c.v, dist, at }; };
   const resize = (dir) => (e) => {
     e.preventDefault(); e.stopPropagation();
     e.target.setPointerCapture?.(e.pointerId);
@@ -270,10 +276,10 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
     const mv = (ev) => {
       let dx = ev.clientX - sx0, dy = ev.clientY - sy0;
       const gls = [];
-      if (dir.includes("e")) { const s = nearest(r0.right + dx, xs); if (s != null) { dx += s - (r0.right + dx); gls.push({ x: s }); } }
-      if (dir.includes("w")) { const s = nearest(r0.left + dx, xs); if (s != null) { dx += s - (r0.left + dx); gls.push({ x: s }); } }
-      if (dir.includes("s")) { const s = nearest(r0.bottom + dy, ys); if (s != null) { dy += s - (r0.bottom + dy); gls.push({ y: s }); } }
-      if (dir.includes("n")) { const s = nearest(r0.top + dy, ys); if (s != null) { dy += s - (r0.top + dy); gls.push({ y: s }); } }
+      if (dir.includes("e")) { const c = nearest(r0.right + dx, xs); if (c) { dx += c.v - (r0.right + dx); gls.push(vGuide(c, r0.top, r0.bottom)); } }
+      if (dir.includes("w")) { const c = nearest(r0.left + dx, xs); if (c) { dx += c.v - (r0.left + dx); gls.push(vGuide(c, r0.top, r0.bottom)); } }
+      if (dir.includes("s")) { const c = nearest(r0.bottom + dy, ys); if (c) { dy += c.v - (r0.bottom + dy); gls.push(hGuide(c, r0.left, r0.right)); } }
+      if (dir.includes("n")) { const c = nearest(r0.top + dy, ys); if (c) { dy += c.v - (r0.top + dy); gls.push(hGuide(c, r0.left, r0.right)); } }
       const patch = {};
       if (dir.includes("e")) patch.width = `${Math.max(40, Math.round(w0 + dx))}px`;
       if (dir.includes("w")) { const nw = Math.max(40, Math.round(w0 - dx)); patch.width = `${nw}px`; patch.translateX = `${tx0 + (w0 - nw)}px`; }
@@ -295,16 +301,23 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
       let dx = ev.clientX - sx0, dy = ev.clientY - sy0;
       const gls = [];
       if (r0) {
-        const xc = [[r0.left + dx], [r0.right + dx], [r0.left + r0.width / 2 + dx]].map(([v]) => [nearest(v, xs), v]).filter((c) => c[0] != null);
-        if (xc.length) { xc.sort((a, b) => Math.abs(a[0] - a[1]) - Math.abs(b[0] - b[1])); dx += xc[0][0] - xc[0][1]; gls.push({ x: xc[0][0] }); }
-        const yc = [[r0.top + dy], [r0.bottom + dy], [r0.top + r0.height / 2 + dy]].map(([v]) => [nearest(v, ys), v]).filter((c) => c[0] != null);
-        if (yc.length) { yc.sort((a, b) => Math.abs(a[0] - a[1]) - Math.abs(b[0] - b[1])); dy += yc[0][0] - yc[0][1]; gls.push({ y: yc[0][0] }); }
+        let bestX = null;
+        [r0.left, r0.right, r0.left + r0.width / 2].forEach((edge) => { const c = nearest(edge + dx, xs); if (c) { const d = Math.abs(c.v - (edge + dx)); if (!bestX || d < bestX.d) bestX = { c, edge, d }; } });
+        if (bestX) dx += bestX.c.v - (bestX.edge + dx);
+        let bestY = null;
+        [r0.top, r0.bottom, r0.top + r0.height / 2].forEach((edge) => { const c = nearest(edge + dy, ys); if (c) { const d = Math.abs(c.v - (edge + dy)); if (!bestY || d < bestY.d) bestY = { c, edge, d }; } });
+        if (bestY) dy += bestY.c.v - (bestY.edge + dy);
+        const dt = r0.top + dy, db = r0.bottom + dy, dl = r0.left + dx, dr = r0.right + dx;
+        if (bestX) gls.push(vGuide(bestX.c, dt, db));
+        if (bestY) gls.push(hGuide(bestY.c, dl, dr));
       }
       setStyles({ translateX: `${tx0 + dx}px`, translateY: `${ty0 + dy}px` }); setGuides(gls);
     };
     const up = () => { setGuides([]); window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up); };
     window.addEventListener("pointermove", mv); window.addEventListener("pointerup", up);
   };
+  const setSide = (keys, side, v, lock) => { const val = v ? `${v}px` : ""; setStyles(lock ? Object.fromEntries(keys.map((k) => [k, val])) : { [side]: val }); };
+  const pasteStyle = () => { if (!clip || !sel) return; patchSec(sel.sec, (s) => ({ ...s, styles: { ...(s.styles || {}), [field]: clone(clip) } })); remount(); toast.success("Style pasted"); };
   const dragPanel = (e) => {
     if (e.target.closest("button")) return;
     e.preventDefault();
@@ -326,7 +339,9 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
   return (
     <>
       {guides.map((g, i) => (
-        <div key={i} className={`live-ui live-guide ${g.x != null ? "live-guide-v" : "live-guide-h"}`} style={g.x != null ? { left: g.x } : { top: g.y }} data-testid="live-guide" />
+        <div key={i} className={`live-ui live-guide ${g.x != null ? "live-guide-v" : "live-guide-h"}`} style={g.x != null ? { left: g.x } : { top: g.y }} data-testid="live-guide">
+          {g.dist != null && <span className="live-guide-dist" style={g.x != null ? { top: g.at, transform: "translate(6px,-50%)" } : { left: g.at, transform: "translate(-50%,6px)" }} data-testid="live-guide-dist">{g.dist}px</span>}
+        </div>
       ))}
       {rect && (
         <div className={`live-ui live-box ${field === "_section" ? "live-box-sec" : ""}`} style={{ top: rect.top, left: rect.left, width: rect.width, height: rect.height }} data-testid="live-selection-box">
@@ -429,23 +444,29 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
                   <label className="live-field">Move X (px)<input type="number" value={px(st.translateX)} placeholder="0" onChange={(e) => setStyles({ translateX: e.target.value ? `${e.target.value}px` : "" })} data-testid="live-move-x" /></label>
                   <label className="live-field">Move Y (px)<input type="number" value={px(st.translateY)} placeholder="0" onChange={(e) => setStyles({ translateY: e.target.value ? `${e.target.value}px` : "" })} data-testid="live-move-y" /></label>
                 </div>
-                <p className="live-label" style={{ marginTop: 4 }}>Padding inside box (px)</p>
-                <div className="live-row">
-                  <label className="live-field">Top<input type="number" value={px(st.paddingTop)} placeholder={padPH("paddingTop")} onChange={(e) => setStyles({ paddingTop: e.target.value ? `${e.target.value}px` : "" })} data-testid="live-pad-top" /></label>
-                  <label className="live-field">Bottom<input type="number" value={px(st.paddingBottom)} placeholder={padPH("paddingBottom")} onChange={(e) => setStyles({ paddingBottom: e.target.value ? `${e.target.value}px` : "" })} data-testid="live-pad-bottom" /></label>
+                <div className="live-lock-head">
+                  <p className="live-label" style={{ margin: 0 }}>Padding inside box (px)</p>
+                  <button type="button" className={`live-btn ${padLock ? "live-on" : ""}`} onClick={() => setPadLock(!padLock)} title={padLock ? "Sides linked — click to unlink" : "Link all sides"} data-testid="live-pad-lock">{padLock ? <Lock size={12} /> : <Unlock size={12} />}</button>
                 </div>
                 <div className="live-row">
-                  <label className="live-field">Left<input type="number" value={px(st.paddingLeft)} placeholder={padPH("paddingLeft")} onChange={(e) => setStyles({ paddingLeft: e.target.value ? `${e.target.value}px` : "" })} data-testid="live-pad-left" /></label>
-                  <label className="live-field">Right<input type="number" value={px(st.paddingRight)} placeholder={padPH("paddingRight")} onChange={(e) => setStyles({ paddingRight: e.target.value ? `${e.target.value}px` : "" })} data-testid="live-pad-right" /></label>
-                </div>
-                <p className="live-label" style={{ marginTop: 4 }}>Margin outside box (px)</p>
-                <div className="live-row">
-                  <label className="live-field">Top<input type="number" value={px(st.marginTop)} placeholder={padPH("marginTop")} onChange={(e) => setStyles({ marginTop: e.target.value ? `${e.target.value}px` : "" })} data-testid="live-mar-top" /></label>
-                  <label className="live-field">Bottom<input type="number" value={px(st.marginBottom)} placeholder={padPH("marginBottom")} onChange={(e) => setStyles({ marginBottom: e.target.value ? `${e.target.value}px` : "" })} data-testid="live-mar-bottom" /></label>
+                  <label className="live-field">Top<input type="number" value={px(st.paddingTop)} placeholder={padPH("paddingTop")} onChange={(e) => setSide(["paddingTop", "paddingBottom", "paddingLeft", "paddingRight"], "paddingTop", e.target.value, padLock)} data-testid="live-pad-top" /></label>
+                  <label className="live-field">Bottom<input type="number" value={px(st.paddingBottom)} placeholder={padPH("paddingBottom")} onChange={(e) => setSide(["paddingTop", "paddingBottom", "paddingLeft", "paddingRight"], "paddingBottom", e.target.value, padLock)} data-testid="live-pad-bottom" /></label>
                 </div>
                 <div className="live-row">
-                  <label className="live-field">Left<input type="number" value={px(st.marginLeft)} placeholder={padPH("marginLeft")} onChange={(e) => setStyles({ marginLeft: e.target.value ? `${e.target.value}px` : "" })} data-testid="live-mar-left" /></label>
-                  <label className="live-field">Right<input type="number" value={px(st.marginRight)} placeholder={padPH("marginRight")} onChange={(e) => setStyles({ marginRight: e.target.value ? `${e.target.value}px` : "" })} data-testid="live-mar-right" /></label>
+                  <label className="live-field">Left<input type="number" value={px(st.paddingLeft)} placeholder={padPH("paddingLeft")} onChange={(e) => setSide(["paddingTop", "paddingBottom", "paddingLeft", "paddingRight"], "paddingLeft", e.target.value, padLock)} data-testid="live-pad-left" /></label>
+                  <label className="live-field">Right<input type="number" value={px(st.paddingRight)} placeholder={padPH("paddingRight")} onChange={(e) => setSide(["paddingTop", "paddingBottom", "paddingLeft", "paddingRight"], "paddingRight", e.target.value, padLock)} data-testid="live-pad-right" /></label>
+                </div>
+                <div className="live-lock-head">
+                  <p className="live-label" style={{ margin: 0 }}>Margin outside box (px)</p>
+                  <button type="button" className={`live-btn ${marLock ? "live-on" : ""}`} onClick={() => setMarLock(!marLock)} title={marLock ? "Sides linked — click to unlink" : "Link all sides"} data-testid="live-mar-lock">{marLock ? <Lock size={12} /> : <Unlock size={12} />}</button>
+                </div>
+                <div className="live-row">
+                  <label className="live-field">Top<input type="number" value={px(st.marginTop)} placeholder={padPH("marginTop")} onChange={(e) => setSide(["marginTop", "marginBottom", "marginLeft", "marginRight"], "marginTop", e.target.value, marLock)} data-testid="live-mar-top" /></label>
+                  <label className="live-field">Bottom<input type="number" value={px(st.marginBottom)} placeholder={padPH("marginBottom")} onChange={(e) => setSide(["marginTop", "marginBottom", "marginLeft", "marginRight"], "marginBottom", e.target.value, marLock)} data-testid="live-mar-bottom" /></label>
+                </div>
+                <div className="live-row">
+                  <label className="live-field">Left<input type="number" value={px(st.marginLeft)} placeholder={padPH("marginLeft")} onChange={(e) => setSide(["marginTop", "marginBottom", "marginLeft", "marginRight"], "marginLeft", e.target.value, marLock)} data-testid="live-mar-left" /></label>
+                  <label className="live-field">Right<input type="number" value={px(st.marginRight)} placeholder={padPH("marginRight")} onChange={(e) => setSide(["marginTop", "marginBottom", "marginLeft", "marginRight"], "marginRight", e.target.value, marLock)} data-testid="live-mar-right" /></label>
                 </div>
               </>
             )}
@@ -460,6 +481,10 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
             </div>
 
             <div className="live-row" style={{ marginTop: 10 }}>
+              <button type="button" className="live-btn" onClick={() => setClip(clone(st))} data-testid="live-copy-style"><Copy size={14} /> Copy style</button>
+              <button type="button" className="live-btn" disabled={!clip} onClick={pasteStyle} data-testid="live-paste-style"><ClipboardPaste size={14} /> Paste style</button>
+            </div>
+            <div className="live-row">
               <button type="button" className="live-btn" onClick={() => setStyles({ width: "", height: "" })} data-testid="live-reset-size"><RotateCcw size={14} /> Reset size</button>
               <button type="button" className="live-btn" onClick={() => setStyles({ translateX: "", translateY: "" })} data-testid="live-reset-pos"><RotateCcw size={14} /> Reset position</button>
               <button type="button" className="live-btn" onClick={() => patchSec(sel.sec, (s) => ({ ...s, styles: { ...(s.styles || {}), [field]: {} } }))} data-testid="live-reset-style"><RotateCcw size={14} /> Clear styles</button>

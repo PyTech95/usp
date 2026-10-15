@@ -94,6 +94,7 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
   const [device, setDevice] = useState("desktop");
   const [hist, setHist] = useState({ past: [], future: [] });
   const [pos, setPos] = useState(null);
+  const [guides, setGuides] = useState([]);
   const fileRef = useRef(null);
 
   const sections = content.sections;
@@ -240,31 +241,68 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
     setSel(null); setDevice("desktop"); setOn(false);
   };
   const num = (v) => (v ? parseInt(v, 10) || 0 : 0);
+  const SNAP = 6;
+  const gatherSnaps = (exclude) => {
+    const xs = [], ys = [];
+    document.querySelectorAll("main [data-sec], main [data-edit]").forEach((el) => {
+      if (!exclude || el === exclude || exclude.contains(el) || el.contains(exclude)) return;
+      const r = el.getBoundingClientRect();
+      if (r.width < 2 || r.height < 2) return;
+      xs.push(r.left, r.right, r.left + r.width / 2);
+      ys.push(r.top, r.bottom, r.top + r.height / 2);
+    });
+    return { xs, ys };
+  };
+  const nearest = (val, cands) => {
+    let best = null, bd = SNAP;
+    for (const c of cands) { const d = Math.abs(val - c); if (d <= bd) { bd = d; best = c; } }
+    return best;
+  };
   const resize = (dir) => (e) => {
     e.preventDefault(); e.stopPropagation();
     e.target.setPointerCapture?.(e.pointerId);
-    const r0 = findEl(sel)?.getBoundingClientRect() || rect;
+    const el = findEl(sel);
+    const r0 = el?.getBoundingClientRect() || rect;
     if (!r0) return;
+    const { xs, ys } = gatherSnaps(el);
     const sx0 = e.clientX, sy0 = e.clientY, w0 = r0.width, h0 = r0.height;
     const tx0 = num(st.translateX), ty0 = num(st.translateY);
     const mv = (ev) => {
-      const dx = ev.clientX - sx0, dy = ev.clientY - sy0;
+      let dx = ev.clientX - sx0, dy = ev.clientY - sy0;
+      const gls = [];
+      if (dir.includes("e")) { const s = nearest(r0.right + dx, xs); if (s != null) { dx += s - (r0.right + dx); gls.push({ x: s }); } }
+      if (dir.includes("w")) { const s = nearest(r0.left + dx, xs); if (s != null) { dx += s - (r0.left + dx); gls.push({ x: s }); } }
+      if (dir.includes("s")) { const s = nearest(r0.bottom + dy, ys); if (s != null) { dy += s - (r0.bottom + dy); gls.push({ y: s }); } }
+      if (dir.includes("n")) { const s = nearest(r0.top + dy, ys); if (s != null) { dy += s - (r0.top + dy); gls.push({ y: s }); } }
       const patch = {};
       if (dir.includes("e")) patch.width = `${Math.max(40, Math.round(w0 + dx))}px`;
       if (dir.includes("w")) { const nw = Math.max(40, Math.round(w0 - dx)); patch.width = `${nw}px`; patch.translateX = `${tx0 + (w0 - nw)}px`; }
       if (dir.includes("s")) patch.height = `${Math.max(20, Math.round(h0 + dy))}px`;
       if (dir.includes("n")) { const nh = Math.max(20, Math.round(h0 - dy)); patch.height = `${nh}px`; patch.translateY = `${ty0 + (h0 - nh)}px`; }
-      setStyles(patch);
+      setStyles(patch); setGuides(gls);
     };
-    const up = () => { window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up); };
+    const up = () => { setGuides([]); window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up); };
     window.addEventListener("pointermove", mv); window.addEventListener("pointerup", up);
   };
   const moveDrag = (e) => {
     e.preventDefault(); e.stopPropagation();
     e.target.setPointerCapture?.(e.pointerId);
+    const el = findEl(sel);
+    const r0 = el?.getBoundingClientRect() || rect;
+    const { xs, ys } = gatherSnaps(el);
     const sx0 = e.clientX, sy0 = e.clientY, tx0 = num(st.translateX), ty0 = num(st.translateY);
-    const mv = (ev) => setStyles({ translateX: `${tx0 + ev.clientX - sx0}px`, translateY: `${ty0 + ev.clientY - sy0}px` });
-    const up = () => { window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up); };
+    const mv = (ev) => {
+      let dx = ev.clientX - sx0, dy = ev.clientY - sy0;
+      const gls = [];
+      if (r0) {
+        const xc = [[r0.left + dx], [r0.right + dx], [r0.left + r0.width / 2 + dx]].map(([v]) => [nearest(v, xs), v]).filter((c) => c[0] != null);
+        if (xc.length) { xc.sort((a, b) => Math.abs(a[0] - a[1]) - Math.abs(b[0] - b[1])); dx += xc[0][0] - xc[0][1]; gls.push({ x: xc[0][0] }); }
+        const yc = [[r0.top + dy], [r0.bottom + dy], [r0.top + r0.height / 2 + dy]].map(([v]) => [nearest(v, ys), v]).filter((c) => c[0] != null);
+        if (yc.length) { yc.sort((a, b) => Math.abs(a[0] - a[1]) - Math.abs(b[0] - b[1])); dy += yc[0][0] - yc[0][1]; gls.push({ y: yc[0][0] }); }
+      }
+      setStyles({ translateX: `${tx0 + dx}px`, translateY: `${ty0 + dy}px` }); setGuides(gls);
+    };
+    const up = () => { setGuides([]); window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up); };
     window.addEventListener("pointermove", mv); window.addEventListener("pointerup", up);
   };
   const dragPanel = (e) => {
@@ -287,6 +325,9 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
 
   return (
     <>
+      {guides.map((g, i) => (
+        <div key={i} className={`live-ui live-guide ${g.x != null ? "live-guide-v" : "live-guide-h"}`} style={g.x != null ? { left: g.x } : { top: g.y }} data-testid="live-guide" />
+      ))}
       {rect && (
         <div className={`live-ui live-box ${field === "_section" ? "live-box-sec" : ""}`} style={{ top: rect.top, left: rect.left, width: rect.width, height: rect.height }} data-testid="live-selection-box">
           <span className="live-move-grip" onPointerDown={moveDrag} title="Drag to move anywhere" data-testid="live-move-grip"><GripVertical size={13} /></span>
@@ -396,6 +437,15 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
                 <div className="live-row">
                   <label className="live-field">Left<input type="number" value={px(st.paddingLeft)} placeholder={padPH("paddingLeft")} onChange={(e) => setStyles({ paddingLeft: e.target.value ? `${e.target.value}px` : "" })} data-testid="live-pad-left" /></label>
                   <label className="live-field">Right<input type="number" value={px(st.paddingRight)} placeholder={padPH("paddingRight")} onChange={(e) => setStyles({ paddingRight: e.target.value ? `${e.target.value}px` : "" })} data-testid="live-pad-right" /></label>
+                </div>
+                <p className="live-label" style={{ marginTop: 4 }}>Margin outside box (px)</p>
+                <div className="live-row">
+                  <label className="live-field">Top<input type="number" value={px(st.marginTop)} placeholder={padPH("marginTop")} onChange={(e) => setStyles({ marginTop: e.target.value ? `${e.target.value}px` : "" })} data-testid="live-mar-top" /></label>
+                  <label className="live-field">Bottom<input type="number" value={px(st.marginBottom)} placeholder={padPH("marginBottom")} onChange={(e) => setStyles({ marginBottom: e.target.value ? `${e.target.value}px` : "" })} data-testid="live-mar-bottom" /></label>
+                </div>
+                <div className="live-row">
+                  <label className="live-field">Left<input type="number" value={px(st.marginLeft)} placeholder={padPH("marginLeft")} onChange={(e) => setStyles({ marginLeft: e.target.value ? `${e.target.value}px` : "" })} data-testid="live-mar-left" /></label>
+                  <label className="live-field">Right<input type="number" value={px(st.marginRight)} placeholder={padPH("marginRight")} onChange={(e) => setStyles({ marginRight: e.target.value ? `${e.target.value}px` : "" })} data-testid="live-mar-right" /></label>
                 </div>
               </>
             )}

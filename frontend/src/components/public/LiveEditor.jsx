@@ -238,8 +238,10 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
   const num = (v) => (v ? parseInt(v, 10) || 0 : 0);
   const resize = (dir) => (e) => {
     e.preventDefault(); e.stopPropagation();
-    if (!rect) return;
-    const sx0 = e.clientX, sy0 = e.clientY, w0 = rect.width, h0 = rect.height;
+    e.target.setPointerCapture?.(e.pointerId);
+    const r0 = findEl(sel)?.getBoundingClientRect() || rect;
+    if (!r0) return;
+    const sx0 = e.clientX, sy0 = e.clientY, w0 = r0.width, h0 = r0.height;
     const tx0 = num(st.translateX), ty0 = num(st.translateY);
     const mv = (ev) => {
       const dx = ev.clientX - sx0, dy = ev.clientY - sy0;
@@ -255,6 +257,7 @@ function Editor({ pageKey, content, setContent, original, remount, autoStart }) 
   };
   const moveDrag = (e) => {
     e.preventDefault(); e.stopPropagation();
+    e.target.setPointerCapture?.(e.pointerId);
     const sx0 = e.clientX, sy0 = e.clientY, tx0 = num(st.translateX), ty0 = num(st.translateY);
     const mv = (ev) => setStyles({ translateX: `${tx0 + ev.clientX - sx0}px`, translateY: `${ty0 + ev.clientY - sy0}px` });
     const up = () => { window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up); };
